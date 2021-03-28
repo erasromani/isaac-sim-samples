@@ -71,6 +71,10 @@ class Extension(omni.ext.IExt):
         self._following = False  # is the task running
         self._target = None
 
+        self._grasp_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Grasp Object"))
+        self._grasp_object_btn.set_clicked_fn(self._on_grasp_object)
+        self._grasp_object_btn.enabled = False
+
         self._add_obstacle_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Obstacles"))
         self._add_obstacle_btn.set_clicked_fn(self._on_add_obstacle)
         self._add_obstacle_btn.enabled = False
@@ -85,11 +89,6 @@ class Extension(omni.ext.IExt):
         self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
         self._gripper_btn.enabled = False
         self._gripper_open = False
-
-        self._get_states_btn = self._window.layout.add_child(omni.kit.ui.Button("Get States"))
-        self._get_states_btn.set_clicked_fn(self._on_get_states)
-        self._get_states_btn.tooltip = omni.kit.ui.Label("click to print state of the robot and block in terminal")
-        self._get_states_btn.enabled = False
 
         self._ar = _dynamic_control.INVALID_HANDLE
 
@@ -251,6 +250,9 @@ class Extension(omni.ext.IExt):
             self._robot.end_effector.gripper.open()
             self._gripper_open = True
 
+    def _on_grasp_object(self, widget):
+        pass
+
     def _on_editor_step(self, step):
         """This function is called every timestep in the editor
         
@@ -268,35 +270,6 @@ class Extension(omni.ext.IExt):
             # update RMP's world and robot states to sync with Kit
             self._world.update()
             self._robot.update()
-
-    def _on_get_states(self, widget):
-        if self._block_prim:
-            # get block pose
-            block_handle = self._dc.get_rigid_body(self._block_path)
-            block_pose = self._dc.get_rigid_body_pose(block_handle)
-            print("\nblock pose:\n \tposition:( {}, {}, {})".format(block_pose.p.x, block_pose.p.y, block_pose.p.z))
-            print("\trotation: ({},{},{},{})".format(block_pose.r.x, block_pose.r.y, block_pose.r.z, block_pose.r.w))
-
-        # get end effector pose
-        if not self._editor.is_playing():
-            print("editor must be playing to get robot state")
-            self._editor.play()
-
-        ee_state = self._robot.end_effector.status.current_frame
-        print(
-            "end effector position: \n \t{}".format(ee_state["orig"] * self._units_per_meter)
-        )  # position retrieved from RMP is in meters
-        print("end effector alignment:")
-        print("\tx_axis: {}".format(ee_state["axis_x"]))
-        print("\ty_axis: {}".format(ee_state["axis_y"]))
-        print("\tz_axis: {}".format(ee_state["axis_z"]))
-
-        # get robot joint states
-        if self._ar == _dynamic_control.INVALID_HANDLE:
-            self._ar = self._dc.get_articulation("/scene/robot")
-        dof_states = self._dc.get_articulation_dof_states(self._ar, _dynamic_control.STATE_POS)
-        print("robot joint states:")
-        print(dof_states["pos"])
 
     def _on_reset(self, widget):
         self._following = False
@@ -356,14 +329,12 @@ class Extension(omni.ext.IExt):
             self._add_obstacle_btn.enabled = False
             self._toggle_obstacle_btn.enabled = False
             self._gripper_btn.enabled = False
-            self._get_states_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
                 self._target_following_btn.enabled = True
                 self._target_following_btn.text = "Follow Target"
                 self._add_obstacle_btn.enabled = True
                 self._gripper_btn.enabled = True
-                self._get_states_btn.enabled = True
                 self._reset_btn.enabled = True
                 if self._block_prim:
                     self._toggle_obstacle_btn.enabled = True
