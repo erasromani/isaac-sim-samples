@@ -283,13 +283,10 @@ class Extension(omni.ext.IExt):
             else:
                 self._target_following_btn.enabled = False
                 self._target_following_btn.text = "Press Play To Enable"
-                self._object_following_btn.enabled = False
-                self._object_following_btn.text = "Press Play To Enable"
 
         else:
             self._create_robot_btn.enabled = True
             self._target_following_btn.text = "Press Create To Enable"
-            self._object_following_btn.text = "Press Create To Enable"
 
     def on_shutdown(self):
         """Cleanup objects on extension shutdown
