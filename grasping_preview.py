@@ -71,6 +71,10 @@ class Extension(omni.ext.IExt):
         self._following = False  # is the task running
         self._target = None
 
+        self._object_following_btn = self._window.layout.add_child(omni.kit.ui.Button("Object Following"))
+        self._object_following_btn.set_clicked_fn(self._on_object_following)
+        self._object_following_btn.enabled = True
+
         self._grasp_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Grasp Object"))
         self._grasp_object_btn.set_clicked_fn(self._on_grasp_object)
         self._grasp_object_btn.enabled = False
@@ -253,6 +257,12 @@ class Extension(omni.ext.IExt):
     def _on_grasp_object(self, widget):
         pass
 
+    def _on_object_following(self, widget):
+        target_path = "/scene/block"
+        if self._stage.GetPrimAtPath(target_path):
+            self._target_prim = self._stage.GetPrimAtPath(target_path)
+            self._following = True
+
     def _on_editor_step(self, step):
         """This function is called every timestep in the editor
         
@@ -328,11 +338,16 @@ class Extension(omni.ext.IExt):
             self._target_following_btn.enabled = False
             self._add_obstacle_btn.enabled = False
             self._toggle_obstacle_btn.enabled = False
+            self._grasp_object_btn.enabled = False
+            self._object_following_btn.enabled = False
             self._gripper_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
                 self._target_following_btn.enabled = True
                 self._target_following_btn.text = "Follow Target"
+                self._grasp_object_btn.text = "Follow Object"
+                self._grasp_object_btn.enabled = True
+                self._object_following_btn.enabled = True
                 self._add_obstacle_btn.enabled = True
                 self._gripper_btn.enabled = True
                 self._reset_btn.enabled = True
@@ -349,9 +364,13 @@ class Extension(omni.ext.IExt):
             else:
                 self._target_following_btn.enabled = False
                 self._target_following_btn.text = "Press Play To Enable"
+                self._object_following_btn.enabled = False
+                self._object_following_btn.text = "Press Play To Enable"
+
         else:
             self._create_robot_btn.enabled = True
             self._target_following_btn.text = "Press Create To Enable"
+            self._object_following_btn.text = "Press Create To Enable"
 
     def on_shutdown(self):
         """Cleanup objects on extension shutdown
