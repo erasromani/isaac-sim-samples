@@ -71,23 +71,15 @@ class Extension(omni.ext.IExt):
         self._following = False  # is the task running
         self._target = None
 
-        self._object_following_btn = self._window.layout.add_child(omni.kit.ui.Button("Object Following"))
-        self._object_following_btn.set_clicked_fn(self._on_object_following)
-        self._object_following_btn.enabled = False
-
-        self._grasp_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Grasp Object"))
-        self._grasp_object_btn.set_clicked_fn(self._on_grasp_object)
-        self._grasp_object_btn.enabled = False
-
-        self._add_obstacle_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Obstacles"))
-        self._add_obstacle_btn.set_clicked_fn(self._on_add_obstacle)
-        self._add_obstacle_btn.enabled = False
+        self._reset_pose_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Robot Pose"))
+        self._reset_pose_btn.set_clicked_fn(self._on_reset_pose)
+        self._reset_pose_btn.enabled = False
+        
+        self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
+        self._add_object_btn.set_clicked_fn(self._on_add_object)
+        self._add_object_btn.enabled = False
         self._obstacle_on = True  # is the obstacle active
         self._block_prim = None
-
-        self._toggle_obstacle_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Obstacles"))
-        self._toggle_obstacle_btn.set_clicked_fn(self._on_toggle_obstacle)
-        self._toggle_obstacle_btn.enabled = False
 
         self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
         self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
@@ -96,7 +88,7 @@ class Extension(omni.ext.IExt):
 
         self._ar = _dynamic_control.INVALID_HANDLE
 
-        self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset"))
+        self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
         self._reset_btn.set_clicked_fn(self._on_reset)
         self._reset_btn.enabled = False
         self._reset_btn.tooltip = omni.kit.ui.Label("Reset Robot to default position")
@@ -195,73 +187,14 @@ class Extension(omni.ext.IExt):
         ## start following it
         self._following = True
 
-    def _on_add_obstacle(self, widget):
-        ## set ground as an obstacles in RMP
-        self._world.register_object(0, "/World/groundPlane/collisionPlane", "ground")
-        self._world.make_obstacle(
-            "ground", 3, (500 * self._meters_per_unit, 500 * self._meters_per_unit, 10 * self._meters_per_unit)
-        )
+    def _on_reset_pose(self, widget):
+        pass
 
-        ## add a block in Kit
-        self._block_path = "/scene/block"
-        if self._stage.GetPrimAtPath(self._block_path):
-            return
-        self._block_geom = UsdGeom.Cube.Define(self._stage, self._block_path)
-        offset = Gf.Vec3f(30, -20, 5)
-        obstacle_color = Gf.Vec3f(1.0, 1.0, 0)
-        size = 10
-        self._block_geom.CreateSizeAttr(size)
-        self._block_geom.AddTranslateOp().Set(offset)
-        self._block_geom.CreateDisplayColorAttr().Set([obstacle_color])
-        self._block_prim = self._stage.GetPrimAtPath(self._block_path)
-
-        ## make this obstacle a rigid body with physics and collision properties
-        physicsAPI = PhysicsSchema.PhysicsAPI.Apply(self._block_prim)
-        physicsAPI.CreateBodyTypeAttr("rigid")
-        PhysicsSchema.CollisionAPI.Apply(self._block_prim)
-
-        ## set the block as an obstacle in RMP
-        self._world.register_object(0, self._block_path, "block")
-        self._world.make_obstacle(
-            "block", 3, (size * self._meters_per_unit, size * self._meters_per_unit, size * self._meters_per_unit)
-        )
-
-        self._obstacle_on = True
-
-    def _on_toggle_obstacle(self, widget):
-        """an obstacle can be temporarily suppressed so that the collision avoidance algorithm ignores it. This can be useful if you need to get very close to an object.
-        """
-        block_suppressor = self._world.get_object_from_name("block")
-        invisible_color = Gf.Vec3f(0.0, 0.0, 1.0)
-        obstacle_color = Gf.Vec3f(1.0, 1.0, 0)
-
-        if self._obstacle_on:
-            block_suppressor.suppress()
-            self._block_geom.GetDisplayColorAttr().Set([invisible_color])
-            self._obstacle_on = False
-        else:
-            block_suppressor.unsuppress()
-            self._block_geom.GetDisplayColorAttr().Set([obstacle_color])
-            self._obstacle_on = True
-
-    def _on_toggle_gripper(self, widget):
-        if self._gripper_open:
-            print("closing gripper")
-            self._robot.end_effector.gripper.close()
-            self._gripper_open = False
-        else:
-            print("opening gripper")
-            self._robot.end_effector.gripper.open()
-            self._gripper_open = True
+    def _on_add_object(self, widget):
+        pass
 
     def _on_grasp_object(self, widget):
         pass
-
-    def _on_object_following(self, widget):
-        target_path = "/scene/block"
-        if self._stage.GetPrimAtPath(target_path):
-            self._target_prim = self._stage.GetPrimAtPath(target_path)
-            self._following = True
 
     def _on_editor_step(self, step):
         """This function is called every timestep in the editor
@@ -323,7 +256,7 @@ class Extension(omni.ext.IExt):
         if event.type == int(omni.usd.StageEventType.OPENED):
             self._create_robot_btn.enabled = True
             self._target_following_btn.enabled = False
-            self._add_obstacle_btn.enabled = False
+            self._add_object_btn.enabled = False
             self._toggle_obstacle_btn.enabled = False
             self._gripper_btn.enabled = False
             self._reset_btn.enabled = False
@@ -336,7 +269,7 @@ class Extension(omni.ext.IExt):
         if self._created:
             self._create_robot_btn.enabled = True
             self._target_following_btn.enabled = False
-            self._add_obstacle_btn.enabled = False
+            self._add_object_btn.enabled = False
             self._toggle_obstacle_btn.enabled = False
             self._grasp_object_btn.enabled = False
             self._object_following_btn.enabled = False
@@ -348,7 +281,7 @@ class Extension(omni.ext.IExt):
                 self._object_following_btn.text = "Follow Object"
                 self._grasp_object_btn.enabled = True
                 self._object_following_btn.enabled = True
-                self._add_obstacle_btn.enabled = True
+                self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
                 self._reset_btn.enabled = True
                 if self._block_prim:
