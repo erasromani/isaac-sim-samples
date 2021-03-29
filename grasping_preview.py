@@ -74,10 +74,12 @@ class Extension(omni.ext.IExt):
         self._reset_pose_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Robot Pose"))
         self._reset_pose_btn.set_clicked_fn(self._on_reset_pose)
         self._reset_pose_btn.enabled = False
+        self._reset_pose_btn.tooltip = omni.kit.ui.Label("Reset robot to default position")
         
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
         self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
+        self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
         self._object_prim = None
 
         self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
@@ -88,13 +90,14 @@ class Extension(omni.ext.IExt):
         self._lift_btn = self._window.layout.add_child(omni.kit.ui.Button("Lift Gripper"))
         self._lift_btn.set_clicked_fn(self._on_lift_gripper)
         self._lift_btn.enabled = False
+        self._lift_btn.tooltip = omni.kit.ui.Label("Lift robot gripper vertically")
 
         self._ar = _dynamic_control.INVALID_HANDLE
 
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
         self._reset_btn.set_clicked_fn(self._on_reset)
         self._reset_btn.enabled = False
-        self._reset_btn.tooltip = omni.kit.ui.Label("Reset Robot to default position")
+        self._reset_btn.tooltip = omni.kit.ui.Label("Reset robot and target to default positions")
 
         self._settings = omni.kit.settings.get_settings_interface()
 
@@ -204,9 +207,6 @@ class Extension(omni.ext.IExt):
         pass
 
     def _on_add_object(self, widget):
-        pass
-    
-    def _on_toggle_gripper(self, widget):
         pass
 
     def _on_lift_gripper(self, widget):
