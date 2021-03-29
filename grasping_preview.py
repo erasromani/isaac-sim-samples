@@ -85,6 +85,10 @@ class Extension(omni.ext.IExt):
         self._gripper_btn.enabled = False
         self._gripper_open = False
 
+        self._lift_btn = self._window.layout.add_child(omni.kit.ui.Button("Lift Gripper"))
+        self._lift_btn.set_clicked_fn(self._on_lift_gripper)
+        self._lift_btn.enabled = False
+
         self._ar = _dynamic_control.INVALID_HANDLE
 
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
@@ -201,8 +205,8 @@ class Extension(omni.ext.IExt):
 
     def _on_add_object(self, widget):
         pass
-
-    def _on_grasp_object(self, widget):
+    
+    def _on_toggle_gripper(self, widget):
         pass
 
     def _on_editor_step(self, step):
@@ -265,8 +269,10 @@ class Extension(omni.ext.IExt):
         if event.type == int(omni.usd.StageEventType.OPENED):
             self._create_robot_btn.enabled = True
             self._target_following_btn.enabled = False
+            self._reset_pose_btn.enabled = False
             self._add_object_btn.enabled = False
             self._gripper_btn.enabled = False
+            self._lift_btn.enabled = False
             self._reset_btn.enabled = False
             self._editor.stop()
             self._stop_tasks()
@@ -279,6 +285,7 @@ class Extension(omni.ext.IExt):
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
             self._gripper_btn.enabled = False
+            self._lift_btn.enabled = False
             self._reset_pose_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
@@ -287,6 +294,7 @@ class Extension(omni.ext.IExt):
                 self._target_following_btn.text = "Follow Target"
                 self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
+                self._lift_btn = True
                 self._reset_btn.enabled = True
                 if self._gripper_open:
                     self._gripper_btn.text = "Press to Close Gripper"
