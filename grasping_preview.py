@@ -297,7 +297,7 @@ class Extension(omni.ext.IExt):
                 self._target_following_btn.text = "Follow Target"
                 self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
-                self._lift_btn = True
+                self._lift_btn.enabled = True
                 self._reset_btn.enabled = True
                 if self._gripper_open:
                     self._gripper_btn.text = "Press to Close Gripper"
