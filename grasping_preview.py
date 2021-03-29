@@ -269,8 +269,10 @@ class Extension(omni.ext.IExt):
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
             self._gripper_btn.enabled = False
+            self._reset_pose_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
+                self.reset_pose_btn.enabled = True
                 self._target_following_btn.enabled = True
                 self._target_following_btn.text = "Follow Target"
                 self._add_object_btn.enabled = True
