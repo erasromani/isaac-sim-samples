@@ -186,6 +186,16 @@ class Extension(omni.ext.IExt):
         ## start following it
         self._following = True
 
+    def _on_toggle_gripper(self, widget):
+        if self._gripper_open:
+            print("closing gripper")
+            self._robot.end_effector.gripper.close()
+            self._gripper_open = False
+        else:
+            print("opening gripper")
+            self._robot.end_effector.gripper.open()
+            self._gripper_open = True
+
     def _on_reset_pose(self, widget):
         pass
 
