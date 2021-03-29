@@ -78,7 +78,6 @@ class Extension(omni.ext.IExt):
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
         self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
-        self._obstacle_on = True  # is the obstacle active
         self._block_prim = None
 
         self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
@@ -271,25 +270,16 @@ class Extension(omni.ext.IExt):
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
             self._toggle_obstacle_btn.enabled = False
-            self._grasp_object_btn.enabled = False
-            self._object_following_btn.enabled = False
             self._gripper_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
                 self._target_following_btn.enabled = True
                 self._target_following_btn.text = "Follow Target"
-                self._object_following_btn.text = "Follow Object"
-                self._grasp_object_btn.enabled = True
-                self._object_following_btn.enabled = True
                 self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
                 self._reset_btn.enabled = True
                 if self._block_prim:
                     self._toggle_obstacle_btn.enabled = True
-                    if self._obstacle_on:
-                        self._toggle_obstacle_btn.text = "Press to Suppress Block"
-                    else:
-                        self._toggle_obstacle_btn.text = "Press to Unsuppress Block"
                 if self._gripper_open:
                     self._gripper_btn.text = "Press to Close Gripper"
                 else:
