@@ -209,6 +209,9 @@ class Extension(omni.ext.IExt):
     def _on_toggle_gripper(self, widget):
         pass
 
+    def _on_lift_gripper(self, widget):
+        pass
+
     def _on_editor_step(self, step):
         """This function is called every timestep in the editor
         
