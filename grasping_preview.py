@@ -78,7 +78,7 @@ class Extension(omni.ext.IExt):
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
         self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
-        self._block_prim = None
+        self._object_prim = None
 
         self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
         self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
@@ -228,7 +228,7 @@ class Extension(omni.ext.IExt):
             self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(30.0, 0.0, 30))
 
         # put obstacle block (a rigid body prim) back in position
-        if self._block_prim:
+        if self._object_prim:
             start_pose = _dynamic_control.Transform()
             start_pose.p = (30.0, -20.0, 5)
             start_pose.r = (0, 0, 0, 1)
@@ -256,7 +256,6 @@ class Extension(omni.ext.IExt):
             self._create_robot_btn.enabled = True
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
-            self._toggle_obstacle_btn.enabled = False
             self._gripper_btn.enabled = False
             self._reset_btn.enabled = False
             self._editor.stop()
@@ -269,7 +268,6 @@ class Extension(omni.ext.IExt):
             self._create_robot_btn.enabled = True
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
-            self._toggle_obstacle_btn.enabled = False
             self._gripper_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
@@ -278,8 +276,6 @@ class Extension(omni.ext.IExt):
                 self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
                 self._reset_btn.enabled = True
-                if self._block_prim:
-                    self._toggle_obstacle_btn.enabled = True
                 if self._gripper_open:
                     self._gripper_btn.text = "Press to Close Gripper"
                 else:
