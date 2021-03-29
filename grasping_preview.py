@@ -345,7 +345,7 @@ class Extension(omni.ext.IExt):
             if self._editor.is_playing():
                 self._target_following_btn.enabled = True
                 self._target_following_btn.text = "Follow Target"
-                self._grasp_object_btn.text = "Follow Object"
+                self._object_following_btn.text = "Follow Object"
                 self._grasp_object_btn.enabled = True
                 self._object_following_btn.enabled = True
                 self._add_obstacle_btn.enabled = True
