@@ -38,7 +38,7 @@ def create_prim_from_usd(stage, prim_env_path, prim_usd_path, location):
     envPrim.GetReferences().AddReference(prim_usd_path)  # attach the USD to the given path
     set_translate(envPrim, location)  # set pose
 
-# communication between git and isaac-sim
+# communication between git and isaac-sim with test branch
 class Extension(omni.ext.IExt):
     def on_startup(self):
         """Initialize extension and UI elements
