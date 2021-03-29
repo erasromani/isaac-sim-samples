@@ -73,7 +73,7 @@ class Extension(omni.ext.IExt):
 
         self._object_following_btn = self._window.layout.add_child(omni.kit.ui.Button("Object Following"))
         self._object_following_btn.set_clicked_fn(self._on_object_following)
-        self._object_following_btn.enabled = True
+        self._object_following_btn.enabled = False
 
         self._grasp_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Grasp Object"))
         self._grasp_object_btn.set_clicked_fn(self._on_grasp_object)
