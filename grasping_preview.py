@@ -81,17 +81,11 @@ class Extension(omni.ext.IExt):
         self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
         self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
-        self._object_prim = None
 
         self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
         self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
         self._gripper_btn.enabled = False
         self._gripper_open = False
-
-        self._lift_btn = self._window.layout.add_child(omni.kit.ui.Button("Lift Gripper"))
-        self._lift_btn.set_clicked_fn(self._on_lift_gripper)
-        self._lift_btn.enabled = False
-        self._lift_btn.tooltip = omni.kit.ui.Label("Lift robot gripper vertically")
 
         self._ar = _dynamic_control.INVALID_HANDLE
 
@@ -177,7 +171,7 @@ class Extension(omni.ext.IExt):
 
     def _register_assets(self):
         ## register world with RMP
-        self._world = World(self._dc, self._mp)
+        self._world =  World(self._dc, self._mp)
 
         ## register robot with RMP
         robot_path = "/scene/robot"
@@ -228,9 +222,6 @@ class Extension(omni.ext.IExt):
         create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
         self.current_obj += 1
 
-    def _on_lift_gripper(self, widget):
-        pass
-
     def _on_editor_step(self, step):
         """This function is called every timestep in the editor
         
@@ -263,14 +254,6 @@ class Extension(omni.ext.IExt):
         if self._target:
             self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(30.0, 0.0, 30))
 
-        # put obstacle block (a rigid body prim) back in position
-        if self._object_prim:
-            start_pose = _dynamic_control.Transform()
-            start_pose.p = (30.0, -20.0, 5)
-            start_pose.r = (0, 0, 0, 1)
-            block_handle = self._dc.get_rigid_body(self._block_path)
-            self._dc.set_rigid_body_pose(block_handle, start_pose)
-
         self._robot = None
         self._first_step = True
 
@@ -294,7 +277,6 @@ class Extension(omni.ext.IExt):
             self._reset_pose_btn.enabled = False
             self._add_object_btn.enabled = False
             self._gripper_btn.enabled = False
-            self._lift_btn.enabled = False
             self._reset_btn.enabled = False
             self._editor.stop()
             self._stop_tasks()
@@ -307,7 +289,6 @@ class Extension(omni.ext.IExt):
             self._target_following_btn.enabled = False
             self._add_object_btn.enabled = False
             self._gripper_btn.enabled = False
-            self._lift_btn.enabled = False
             self._reset_pose_btn.enabled = False
             self._reset_btn.enabled = False
             if self._editor.is_playing():
@@ -316,7 +297,6 @@ class Extension(omni.ext.IExt):
                 self._target_following_btn.text = "Follow Target"
                 self._add_object_btn.enabled = True
                 self._gripper_btn.enabled = True
-                self._lift_btn.enabled = True
                 self._reset_btn.enabled = True
                 if self._gripper_open:
                     self._gripper_btn.text = "Press to Close Gripper"
