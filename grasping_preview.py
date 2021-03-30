@@ -225,7 +225,7 @@ class Extension(omni.ext.IExt):
     def _on_add_object(self, widget):
         prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
-        location = Gf.Vec3d(30, 1.2 self.current_obj, 10)
+        location = Gf.Vec3d(30, 1.2 * self.current_obj, 10)
         create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
         self.current_obj += 1
 
