@@ -156,12 +156,12 @@ class Extension(omni.ext.IExt):
                     self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
                     self.goal_coord = create_xyz(init=self.default_goal_coord)
                     for axis in self.goal_coord:
-                        self.goal_coord[axis].set_key_pressed_fn(self._on_update_goal_coord)
-                        self.goal_coord[axis].set_mouse_double_clicked_fn(self._on_update_goal_coord)
+                        # self.goal_coord[axis].set_key_pressed_fn(self._on_update_goal_coord)
+                        # self.goal_coord[axis].set_mouse_double_clicked_fn(self._on_update_goal_coord)
                         self.goal_coord[axis].set_mouse_moved_fn(self._on_update_goal_coord)
-                        self.goal_coord[axis].set_mouse_pressed_fn(self._on_update_goal_coord)
-                        self.goal_coord[axis].set_mouse_released_fn(self._on_update_goal_coord)
-                        self.goal_coord[axis].set_mouse_wheel_fn(self._on_update_goal_coord)
+                        # self.goal_coord[axis].set_mouse_pressed_fn(self._on_update_goal_coord)
+                        # self.goal_coord[axis].set_mouse_released_fn(self._on_update_goal_coord)
+                        # self.goal_coord[axis].set_mouse_wheel_fn(self._on_update_goal_coord)
                 with ui.HStack(height=5):
                     ui.Spacer(width=9)
                     self._angle_label = ui.Label("Set Grasp Angle", width=100)
