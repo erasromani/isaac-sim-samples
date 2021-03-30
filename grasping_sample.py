@@ -269,7 +269,7 @@ class Extension(omni.ext.IExt):
         target_size = 3
         target_geom.CreateRadiusAttr(target_size)
         target_geom.AddTranslateOp().Set(offset)
-        target_geom.AddRotateZYX().Set(rotate)
+        target_geom.AddRotateZYXOp().Set(rotate)
         target_geom.CreateDisplayColorAttr().Set([colors])
         self._target_prim = self._stage.GetPrimAtPath(target_path)
 
