@@ -36,7 +36,7 @@ EXTENSION_NAME = "Grasping Sample"
 
 def create_xyz(init={"X": 30, "Y": 0, "Z": 30}):
     all_axis = ["X", "Y", "Z"]
-    colors = {"X": 0xFF5555AA, "Y": 0xFF76A371, "Z": 0xFF0A07D4F}
+    colors = {"X": 0xFF5555AA, "Y": 0xFF76A371, "Z": 0xFFA07D4F}
     float_drags = {}
     for axis in all_axis:
         with ui.HStack():
