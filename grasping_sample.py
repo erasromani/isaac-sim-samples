@@ -53,7 +53,7 @@ def create_xyz(init={"X": 30, "Y": 0, "Z": 30}):
 
 def create_angle(init=0):
     color = 0xFF000000
-    with ui.HStack():
+    with ui.HStack(width=15):
         with ui.ZStack(width=15):
             ui.Rectangle(
                 width=15,
@@ -155,7 +155,7 @@ class Extension(omni.ext.IExt):
                     self._goal_label.set_tooltip("Set target grasp center specified as (X, Y, Z)")
                     self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
                     self.goal_coord = create_xyz(init=self.default_goal_coord)
-                with ui.HStack(height=10):
+                with ui.HStack(height=5):
                     ui.Spacer(width=9)
                     self._angle_label = ui.Label("Set Grasp Angle", width=100)
                     self._angle_label.set_tooltip("Set target grasp angle specified in degrees")
