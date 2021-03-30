@@ -8,6 +8,7 @@
 
 import carb
 import random
+import math
 from pxr import Usd, UsdGeom, Gf, PhysicsSchema, PhysxSchema, Sdf, UsdLux
 import omni.kit.editor
 import omni.ext
@@ -163,6 +164,7 @@ class Extension(omni.ext.IExt):
                     self._angle_label.set_tooltip("Set target grasp angle specified in degrees")
                     self.default_goal_angle = 0
                     self.goal_angle = create_angle(init=self.default_goal_angle)
+                    self.goal_angle.model.add_value_changed_fn(self._on_update_goal_angle)
                 with ui.HStack(height=5):
                     ui.Spacer(width=5)
                     self._reset_btn = ui.Button("Reset Scene", width=125)
@@ -244,6 +246,12 @@ class Extension(omni.ext.IExt):
             goal_z = self.goal_coord["Z"].model.get_value_as_float()
             self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(goal_x, goal_y, goal_z))
 
+    def _on_update_goal_angle(self, *args):
+        if self.following:
+            goal_t = self.goal_angle.model.get_value_as_float()
+            target_rot = self._target_prim.GetAttribute("xformOp:rotateZYX").Get()
+            self._target_prim.GetAttribute("xformOp:rotateZYX").Set(Gf.Vec3f(target_rot[0], target_rot[1], goal_t))
+
     def _on_target_following(self):
         ## create target
         target_path = "/scene/target"
@@ -258,7 +266,7 @@ class Extension(omni.ext.IExt):
         target_geom = UsdGeom.Sphere.Define(self._stage, target_path)
         offset = Gf.Vec3f(goal_x, goal_y, goal_z)  ## these are in cm
         colors = Gf.Vec3f(1.0, 0, 0)
-        target_size = 4
+        target_size = 3
         target_geom.CreateRadiusAttr(target_size)
         target_geom.AddTranslateOp().Set(offset)
         target_geom.CreateDisplayColorAttr().Set([colors])
@@ -305,7 +313,12 @@ class Extension(omni.ext.IExt):
                 self._first_step = False
             if self._following:
                 target_pos = self._target_prim.GetAttribute("xformOp:translate").Get()
-                self._target = {"orig": np.array([target_pos[0], target_pos[1], target_pos[2]]) * self._meters_per_unit}
+                target_rot = self._target_prim.GetAttribute("xformOp:rotateZYX").Get()
+                self._target = {
+                                "orig": np.array([target_pos[0], target_pos[1], target_pos[2]]) * self._meters_per_unit, 
+                                "axis_z": np.array([0.0, 0.0, -1.0]), 
+                                "axis_y": np.array([math.sin(target_rot[2]), math.cost(target_rot[2]), 0.0]),
+                                }
                 self._robot.end_effector.go_local(target=self._target, use_default_config=True, wait_for_target=True)
                 self.goal_coord["X"].model.set_value(target_pos[0])
                 self.goal_coord["Y"].model.set_value(target_pos[1])
@@ -327,7 +340,8 @@ class Extension(omni.ext.IExt):
         # put target back (a visual prim) in position
         if self._target:
             for axis in self.goal_coord:
-                self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])           
+                self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])
+            self.goal_angle.model.set_value(self.default_goal_angle)           
             self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(self.default_goal_coord["X"], self.default_goal_coord["Y"], self.default_goal_coord["Z"]))
 
         self._robot = None
