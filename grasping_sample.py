@@ -147,7 +147,7 @@ class Extension(omni.ext.IExt):
                     self._reset_btn.enabled = False
                     self._reset_btn.set_tooltip("Reset robot and target to default positions")
 
-    def _on_environment_setup(self, widget):
+    def _on_environment_setup(self):
         task = asyncio.ensure_future(omni.kit.asyncapi.new_stage())
         asyncio.ensure_future(self._on_create_robot(task))
 
@@ -214,7 +214,7 @@ class Extension(omni.ext.IExt):
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self._world, default_config
         )
 
-    def _on_target_following(self, widget):
+    def _on_target_following(self):
         ## create target
         target_path = "/scene/target"
         if self._stage.GetPrimAtPath(target_path):
@@ -232,7 +232,7 @@ class Extension(omni.ext.IExt):
         ## start following it
         self._following = True
 
-    def _on_toggle_gripper(self, widget):
+    def _on_toggle_gripper(self):
         if self._gripper_open:
             print("closing gripper")
             self._robot.end_effector.gripper.close()
@@ -242,7 +242,7 @@ class Extension(omni.ext.IExt):
             self._robot.end_effector.gripper.open()
             self._gripper_open = True
 
-    def _on_reset_pose(self, widget):
+    def _on_reset_pose(self):
         self._following = False
 
         # put robot (an articulated prim) in a specific joint configuration
@@ -250,7 +250,7 @@ class Extension(omni.ext.IExt):
         self._robot.send_config(reset_config)
         self._robot.end_effector.go_local(use_default_config=True, wait_for_target=False)
 
-    def _on_add_object(self, widget):
+    def _on_add_object(self):
         prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
         location = Gf.Vec3d(30, 1.2 * self.current_obj, 10)
@@ -275,7 +275,7 @@ class Extension(omni.ext.IExt):
             self._world.update()
             self._robot.update()
 
-    def _on_reset(self, widget):
+    def _on_reset(self):
         self._following = False
 
         # put robot (an articulated prim) in a specific joint configuration
