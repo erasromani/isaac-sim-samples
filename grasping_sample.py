@@ -39,7 +39,7 @@ def create_xyz(init={"X": 30, "Y": 0, "Z": 30}):
     colors = {"X": 0xFF5555AA, "Y": 0xFF76A371, "Z": 0xFFA07D4F}
     float_drags = {}
     for axis in all_axis:
-        with ui.HStack():
+        with ui.HStack():            
             with ui.ZStack(width=15):
                 ui.Rectangle(
                     width=15,
@@ -155,6 +155,13 @@ class Extension(omni.ext.IExt):
                     self._goal_label.set_tooltip("Set target grasp center specified as (X, Y, Z)")
                     self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
                     self.goal_coord = create_xyz(init=self.default_goal_coord)
+                    for axis in self.goal_coord:
+                        self.goal_coord[axis].set_key_pressed_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].set_mouse_double_clicked_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].set_mouse_moved_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].set_mouse_pressed_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].set_mouse_released_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].set_mouse_wheel_fn(self._on_update_goal_coord)
                 with ui.HStack(height=5):
                     ui.Spacer(width=9)
                     self._angle_label = ui.Label("Set Grasp Angle", width=100)
@@ -234,6 +241,12 @@ class Extension(omni.ext.IExt):
         self._robot = Franka(
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self._world, default_config
         )
+
+    def _on_update_goal_coord(self):
+        goal_x = self.goal_coord["X"].model.get_value_as_float()
+        goal_y = self.goal_coord["Y"].model.get_value_as_float()
+        goal_z = self.goal_coord["Z"].model.get_value_as_float()
+        self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(goal_x, goal_y, goal_z))        
 
     def _on_target_following(self):
         ## create target
