@@ -32,7 +32,7 @@ from omni.isaac.utils.scripts.scene_utils import set_translate, set_up_z_axis, s
 import numpy as np
 import gc
 
-EXTENSION_NAME = "Grasping Preview"
+EXTENSION_NAME = "Grasping Sample"
 
 def create_xyz(init={"X": 100, "Y": 100, "Z": 0}):
     all_axis = ["X", "Y", "Z"]
@@ -64,58 +64,21 @@ class Extension(omni.ext.IExt):
         self._editor = omni.kit.editor.get_editor_interface()
         self._usd_context = omni.usd.get_context()
         self._stage = self._usd_context.get_stage()
-        self._window = omni.kit.ui.Window(
-            EXTENSION_NAME,
-            300,
-            200,
-            menu_path="Isaac Robotics/Samples/" + EXTENSION_NAME,
-            open=False,
-            dock=omni.kit.ui.DockPreference.LEFT_BOTTOM,
+        self._window = ui.Window(EXTENSION_NAME, width=800, height=400, visible=False)
+        self._window.deferred_dock_in("Content")
+        self._menu_entry = omni.kit.ui.get_editor_menu().add_item(
+            f"Isaac Robotics/Samples/{EXTENSION_NAME}", self._menu_callback
         )
-        self._window.set_update_fn(self._on_update_ui)
+
+        #self._window.set_update_fn(self._on_update_ui)
 
         self._mp = _motion_planning.acquire_motion_planning_interface()
         self._dc = _dynamic_control.acquire_dynamic_control_interface()
-
+        self._create_ui()
+        
         self._physxIFace = _physx.acquire_physx_interface()
 
-        self._create_robot_btn = self._window.layout.add_child(omni.kit.ui.Button("Load Robot"))
-        self._create_robot_btn.set_clicked_fn(self._on_environment_setup)
-        self._created = False  # is the robot loaded
-
-        self._target_following_btn = self._window.layout.add_child(omni.kit.ui.Button("Target Following"))
-        self._target_following_btn.set_clicked_fn(self._on_target_following)
-        self._target_following_btn.enabled = False
-        self._following = False  # is the task running
-        self._target = None
-
-        self._reset_pose_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Robot Pose"))
-        self._reset_pose_btn.set_clicked_fn(self._on_reset_pose)
-        self._reset_pose_btn.enabled = False
-        self._reset_pose_btn.tooltip = omni.kit.ui.Label("Reset robot to default position")
-        
-        self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
-        self._add_object_btn.set_clicked_fn(self._on_add_object)
-        self._add_object_btn.enabled = False
-        self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
-
-        self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
-        self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
-        self._gripper_btn.enabled = False
-        self._gripper_open = False
-
-        with ui.HStack(height=5):
-            ui.Spacer(width=9)
-            self._goal_label = ui.Label("Set Grasp Target", width=100)
-            self._goal_label.set_tooltip("Set grasp center target specified as (X, Y, Z)")
-            self.goal_coord = create_xyz(init={"X": -200, "Y": -400, "Z": 0})
-
         self._ar = _dynamic_control.INVALID_HANDLE
-
-        self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
-        self._reset_btn.set_clicked_fn(self._on_reset)
-        self._reset_btn.enabled = False
-        self._reset_btn.tooltip = omni.kit.ui.Label("Reset robot and target to default positions")
 
         self._settings = omni.kit.settings.get_settings_interface()
 
@@ -134,6 +97,51 @@ class Extension(omni.ext.IExt):
         ## unit conversions: RMP is in meters, kit is by default in cm
         self._meters_per_unit = UsdGeom.GetStageMetersPerUnit(self._stage)
         self._units_per_meter = 1.0 / UsdGeom.GetStageMetersPerUnit(self._stage)
+
+    def _create_ui(self):
+        with self._window.frame:
+            with omni.ui.VStack():
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._create_robot_btn = self._window.layout.add_child(omni.kit.ui.Button("Load Robot"))
+                    self._create_robot_btn.set_clicked_fn(self._on_environment_setup)
+                    self._created = False  # is the robot loaded
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._target_following_btn = self._window.layout.add_child(omni.kit.ui.Button("Target Following"))
+                    self._target_following_btn.set_clicked_fn(self._on_target_following)
+                    self._target_following_btn.enabled = False
+                    self._following = False  # is the task running
+                    self._target = None
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._reset_pose_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Robot Pose"))
+                    self._reset_pose_btn.set_clicked_fn(self._on_reset_pose)
+                    self._reset_pose_btn.enabled = False
+                    self._reset_pose_btn.tooltip = omni.kit.ui.Label("Reset robot to default position")
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
+                    self._add_object_btn.set_clicked_fn(self._on_add_object)
+                    self._add_object_btn.enabled = False
+                    self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
+                with ui.HStack(height=5):
+                    ui.Spacer(width=9)
+                    self._goal_label = ui.Label("Set Grasp Target", width=100)
+                    self._goal_label.set_tooltip("Set grasp center target specified as (X, Y, Z)")
+                    self.goal_coord = create_xyz(init={"X": -200, "Y": -400, "Z": 0})
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
+                    self._gripper_btn.set_clicked_fn(self._on_toggle_gripper)
+                    self._gripper_btn.enabled = False
+                    self._gripper_open = False
+                with ui.HStack(height=5):
+                    ui.Spacer(width=5)
+                    self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
+                    self._reset_btn.set_clicked_fn(self._on_reset)
+                    self._reset_btn.enabled = False
+                    self._reset_btn.tooltip = omni.kit.ui.Label("Reset robot and target to default positions")
 
     def _on_environment_setup(self, widget):
         task = asyncio.ensure_future(omni.kit.asyncapi.new_stage())
