@@ -25,7 +25,7 @@ from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 from omni.isaac.samples.scripts.utils.world import World
 from omni.isaac.samples.scripts.utils.reactive_behavior import FrameTerminationCriteria
 from omni.isaac.utils.scripts.nucleus_utils import find_nucleus_server
-from omni.isaac.utils.scripts.scene_utils import set_translate, set_rotate, set_up_z_axis, setup_physics, create_background
+from omni.isaac.utils.scripts.scene_utils import set_translate, set_up_z_axis, setup_physics, create_background
 
 import numpy as np
 import gc
@@ -37,27 +37,6 @@ def create_prim_from_usd(stage, prim_env_path, prim_usd_path, location):
     envPrim = stage.DefinePrim(prim_env_path, "Xform")  # create an empty Xform at the given path
     envPrim.GetReferences().AddReference(prim_usd_path)  # attach the USD to the given path
     set_translate(envPrim, location)  # set pose
-
-
-def create_objects(stage, asset_paths, env_paths, translations, rotations=None):
-    if rotations is None:
-        rotations = [None for i in range(len(asset_paths))]
-    if (
-        (len(asset_paths) != len(env_paths))
-        and len(asset_paths) != len(translations)
-        and (len(asset_paths) != len(rotations))
-    ):
-        print("Error: asset paths, env paths and poses must be same length")
-        return
-    for (asset, path, translation, rotation) in zip(*[asset_paths, env_paths, translations, rotations]):
-        prim = stage.GetPrimAtPath(path)
-        if not prim:
-            prim = stage.DefinePrim(path, "Xform")
-        prim.GetReferences().AddReference(asset)
-        set_translate(prim, translation)
-        if rotation is not None:
-            set_rotate(prim, rotation)
-
 
 # communication between git and isaac-sim with test branch
 class Extension(omni.ext.IExt):
