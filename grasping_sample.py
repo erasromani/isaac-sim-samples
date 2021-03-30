@@ -297,7 +297,7 @@ class Extension(omni.ext.IExt):
     def _on_add_object(self):
         prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
-        location = Gf.Vec3d(30, 1.2 * self.current_obj, 10)
+        location = Gf.Vec3d(30, 2 * self.current_obj, 10)
         create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
         self.current_obj += 1
 
@@ -324,6 +324,7 @@ class Extension(omni.ext.IExt):
                 self.goal_coord["X"].model.set_value(target_pos[0])
                 self.goal_coord["Y"].model.set_value(target_pos[1])
                 self.goal_coord["Z"].model.set_value(target_pos[2])
+                self.goal_angle.model.set_value(target_rot[2])
             # update RMP's world and robot states to sync with Kit
             self._world.update()
             self._robot.update()
@@ -340,6 +341,7 @@ class Extension(omni.ext.IExt):
 
         # put target back (a visual prim) in position
         if self._target:
+            self._target_following_btn.text = "It went through!"
             for axis in self.goal_coord:
                 self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])
             self.goal_angle.model.set_value(self.default_goal_angle)           
