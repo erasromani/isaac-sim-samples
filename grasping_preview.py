@@ -25,7 +25,7 @@ from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 from omni.isaac.samples.scripts.utils.world import World
 from omni.isaac.samples.scripts.utils.reactive_behavior import FrameTerminationCriteria
 from omni.isaac.utils.scripts.nucleus_utils import find_nucleus_server
-from omni.isaac.utils.scripts.scene_utils import set_translate, set_up_z_axis, setup_physics, create_background
+from omni.isaac.utils.scripts.scene_utils import set_translate, set_rotate, set_up_z_axis, setup_physics, create_background
 
 import numpy as np
 import gc
@@ -37,6 +37,27 @@ def create_prim_from_usd(stage, prim_env_path, prim_usd_path, location):
     envPrim = stage.DefinePrim(prim_env_path, "Xform")  # create an empty Xform at the given path
     envPrim.GetReferences().AddReference(prim_usd_path)  # attach the USD to the given path
     set_translate(envPrim, location)  # set pose
+
+
+def create_objects(stage, asset_paths, env_paths, translations, rotations=None):
+    if rotations is None:
+        rotations = [None for i in range(len(asset_paths))]
+    if (
+        (len(asset_paths) != len(env_paths))
+        and len(asset_paths) != len(translations)
+        and (len(asset_paths) != len(rotations))
+    ):
+        print("Error: asset paths, env paths and poses must be same length")
+        return
+    for (asset, path, translation, rotation) in zip(*[asset_paths, env_paths, translations, rotations]):
+        prim = stage.GetPrimAtPath(path)
+        if not prim:
+            prim = stage.DefinePrim(path, "Xform")
+        prim.GetReferences().AddReference(asset)
+        set_translate(prim, translation)
+        if rotation is not None:
+            set_rotate(prim, rotation)
+
 
 # communication between git and isaac-sim with test branch
 class Extension(omni.ext.IExt):
@@ -146,6 +167,16 @@ class Extension(omni.ext.IExt):
         robot_path = "/scene/robot"
         create_prim_from_usd(self._stage, robot_path, robot_usd, Gf.Vec3d(0, 0, 0))
 
+        self.objects = [
+            nucleus_server + "/Objects/sqbowl.usd",
+            asset_path + "/Props/Flip_Stack/large_corner_bracket_physics.usd",
+            asset_path + "/Props/Flip_Stack/screw_95_physics.usd",
+            asset_path + "/Props/Flip_Stack/screw_99_physics.usd",
+            asset_path + "/Props/Flip_Stack/small_corner_bracket_physics.usd",
+            asset_path + "/Props/Flip_Stack/t_connector_physics.usd",
+        ]
+        self.current_obj = 0
+
         self._physxIFace.release_physics_objects()
         self._physxIFace.force_load_physics_from_usd()
 
@@ -204,10 +235,19 @@ class Extension(omni.ext.IExt):
             self._gripper_open = True
 
     def _on_reset_pose(self, widget):
-        pass
+        self._following = False
+
+        # put robot (an articulated prim) in a specific joint configuration
+        reset_config = np.array([0.00, -1.3, 0.00, -2.57, 0.00, 2.20, 0.75])
+        self._robot.send_config(reset_config)
+        self._robot.end_effector.go_local(use_default_config=True, wait_for_target=False)
 
     def _on_add_object(self, widget):
-        pass
+        prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
+        prim_env_path = "scene/objects/object_{}".format(self.current_obj) for i in range(num_objs)
+        location = Gf.Vec3d(30, 1.2 self.current_obj, 10)
+        create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
+        self.current_obj += 1
 
     def _on_lift_gripper(self, widget):
         pass
