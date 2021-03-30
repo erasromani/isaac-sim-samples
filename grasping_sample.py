@@ -60,7 +60,7 @@ def create_angle(init=0):
                 height=20,
                 style={"background_color": color, "border_radius": 3, "corner_flag": ui.CornerFlag.LEFT},
             )
-            ui.Label("θ", name="transform_label", alignment=ui.Alignment.CENTER)
+            ui.Label("T", name="transform_label", alignment=ui.Alignment.CENTER)
         float_drag = ui.FloatDrag(name="transform", min=-1000000, max=1000000, step=1, width=100)
         float_drag.model.set_value(init)
     return float_drag
@@ -156,7 +156,7 @@ class Extension(omni.ext.IExt):
                     self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
                     self.goal_coord = create_xyz(init=self.default_goal_coord)
                 with ui.HStack(height=5):
-                    ui.Spacer(width=9)
+                    ui.Spacer(width=18)
                     self._angle_label = ui.Label("Set Grasp Angle", width=100)
                     self._angle_label.set_tooltip("Set target grasp angle specified in degrees")
                     self.default_goal_angle = 0
