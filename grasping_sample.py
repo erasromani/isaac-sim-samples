@@ -296,7 +296,7 @@ class Extension(omni.ext.IExt):
         if self._target:
             for axis in self.goal_coord:
                 self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])           
-            # self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(30.0, 0.0, 30))
+            self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(self.default_goal_coord["X"], self.default_goal_coord["Y"], self.default_goal_coord["Y"]))
 
         self._robot = None
         self._first_step = True
