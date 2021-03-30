@@ -156,12 +156,7 @@ class Extension(omni.ext.IExt):
                     self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
                     self.goal_coord = create_xyz(init=self.default_goal_coord)
                     for axis in self.goal_coord:
-                        # self.goal_coord[axis].set_key_pressed_fn(self._on_update_goal_coord)
-                        # self.goal_coord[axis].set_mouse_double_clicked_fn(self._on_update_goal_coord)
-                        self.goal_coord[axis].set_mouse_moved_fn(self._on_update_goal_coord)
-                        # self.goal_coord[axis].set_mouse_pressed_fn(self._on_update_goal_coord)
-                        # self.goal_coord[axis].set_mouse_released_fn(self._on_update_goal_coord)
-                        # self.goal_coord[axis].set_mouse_wheel_fn(self._on_update_goal_coord)
+                        self.goal_coord[axis].model.add_value_changed_fn(self._on_update_goal_coord)
                 with ui.HStack(height=5):
                     ui.Spacer(width=9)
                     self._angle_label = ui.Label("Set Grasp Angle", width=100)
@@ -242,7 +237,7 @@ class Extension(omni.ext.IExt):
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self._world, default_config
         )
 
-    def _on_update_goal_coord(self):
+    def _on_update_goal_coord(self, *args):
         goal_x = self.goal_coord["X"].model.get_value_as_float()
         goal_y = self.goal_coord["Y"].model.get_value_as_float()
         goal_z = self.goal_coord["Z"].model.get_value_as_float()
