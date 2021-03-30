@@ -238,10 +238,11 @@ class Extension(omni.ext.IExt):
         )
 
     def _on_update_goal_coord(self, *args):
-        goal_x = self.goal_coord["X"].model.get_value_as_float()
-        goal_y = self.goal_coord["Y"].model.get_value_as_float()
-        goal_z = self.goal_coord["Z"].model.get_value_as_float()
-        self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(goal_x, goal_y, goal_z))        
+        if self._following:
+            goal_x = self.goal_coord["X"].model.get_value_as_float()
+            goal_y = self.goal_coord["Y"].model.get_value_as_float()
+            goal_z = self.goal_coord["Z"].model.get_value_as_float()
+            self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(goal_x, goal_y, goal_z))
 
     def _on_target_following(self):
         ## create target
@@ -306,6 +307,9 @@ class Extension(omni.ext.IExt):
                 target_pos = self._target_prim.GetAttribute("xformOp:translate").Get()
                 self._target = {"orig": np.array([target_pos[0], target_pos[1], target_pos[2]]) * self._meters_per_unit}
                 self._robot.end_effector.go_local(target=self._target, use_default_config=True, wait_for_target=True)
+                self.goal_coord["X"].model.set_value(target_pos[0])
+                self.goal_coord["Y"].model.set_value(target_pos[1])
+                self.goal_coord["Z"].model.set_value(target_pos[2])
             # update RMP's world and robot states to sync with Kit
             self._world.update()
             self._robot.update()
