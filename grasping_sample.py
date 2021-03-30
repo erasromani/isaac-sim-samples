@@ -139,7 +139,8 @@ class Extension(omni.ext.IExt):
                     ui.Spacer(width=9)
                     self._goal_label = ui.Label("Set Grasp Center", width=100)
                     self._goal_label.set_tooltip("Set target grasp center specified as (X, Y, Z)")
-                    self.goal_coord = create_xyz(init={"X": 30, "Y": 0, "Z": 30})
+                    self.default_goal_coord = {"X": 30, "Y": 0, "Z": 30}
+                    self.goal_coord = create_xyz(init=self.default_goal_coord)
                 with ui.HStack(height=5):
                     ui.Spacer(width=5)
                     self._reset_btn = ui.Button("Reset Scene", width=125)
@@ -293,7 +294,9 @@ class Extension(omni.ext.IExt):
 
         # put target back (a visual prim) in position
         if self._target:
-            self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(30.0, 0.0, 30))
+            for axis in self.goal_coord:
+                self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])           
+            # self._target_prim.GetAttribute("xformOp:translate").Set(Gf.Vec3f(30.0, 0.0, 30))
 
         self._robot = None
         self._first_step = True
