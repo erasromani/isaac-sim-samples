@@ -352,7 +352,7 @@ class Extension(omni.ext.IExt):
         self._editor.stop()
         self._stop_tasks()
         self._editor_event_subscription = None
-        self._window.set_update_fn(None)
+        self._window = None
         gc.collect()
 
     def has_arrived(self):
