@@ -263,6 +263,7 @@ class Extension(omni.ext.IExt):
         Arguments:
             step (float): elapsed time between steps
         """
+        self._on_update_ui()
         if self._created and self._editor.is_playing():
             if self._first_step:
                 self._register_assets()
@@ -274,7 +275,6 @@ class Extension(omni.ext.IExt):
             # update RMP's world and robot states to sync with Kit
             self._world.update()
             self._robot.update()
-        self._on_update_ui()
 
     def _on_reset(self):
         self._following = False
