@@ -34,9 +34,9 @@ import gc
 
 EXTENSION_NAME = "Grasping Sample"
 
-def create_xyz(init={"X": 100, "Y": 100, "Z": 0}):
+def create_xyz(init={"X": 30, "Y": 0, "Z": 30}):
     all_axis = ["X", "Y", "Z"]
-    colors = {"X": 0xFF5555AA, "Y": 0xFF76A371, "Z": 0xFFA07D4F}
+    colors = {"X": 0xFF5555AA, "Y": 0xFF76A371, "Z": 0xFF0A07D4F}
     float_drags = {}
     for axis in all_axis:
         with ui.HStack():
@@ -137,9 +137,9 @@ class Extension(omni.ext.IExt):
                     self._gripper_open = False
                 with ui.HStack(height=5):
                     ui.Spacer(width=9)
-                    self._goal_label = ui.Label("Set Robot Goal", width=100)
-                    self._goal_label.set_tooltip("Set robot target specified as (X, Y, theta)")
-                    self.goal_coord = create_xyz(init={"X": -200, "Y": -400, "Z": 0})
+                    self._goal_label = ui.Label("Set Grasp Center", width=100)
+                    self._goal_label.set_tooltip("Set target grasp center specified as (X, Y, Z)")
+                    self.goal_coord = create_xyz(init={"X": 30, "Y": 0, "Z": 30})
                 with ui.HStack(height=5):
                     ui.Spacer(width=5)
                     self._reset_btn = ui.Button("Reset Scene", width=125)
@@ -220,8 +220,13 @@ class Extension(omni.ext.IExt):
         if self._stage.GetPrimAtPath(target_path):
             self._following = True
             return
+
+        goal_x = self.goal_coord["X"].model.get_value_as_float()
+        goal_y = self.goal_coord["Y"].model.get_value_as_float()
+        goal_z = self.goal_coord["Z"].model.get_value_as_float()
+
         target_geom = UsdGeom.Sphere.Define(self._stage, target_path)
-        offset = Gf.Vec3f(30, 0.0, 30.0)  ## these are in cm
+        offset = Gf.Vec3f(goal_x, goal_y, goal_z)  ## these are in cm
         colors = Gf.Vec3f(1.0, 0, 0)
         target_size = 4
         target_geom.CreateRadiusAttr(target_size)
