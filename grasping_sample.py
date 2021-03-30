@@ -274,6 +274,7 @@ class Extension(omni.ext.IExt):
             # update RMP's world and robot states to sync with Kit
             self._world.update()
             self._robot.update()
+        self._on_update_ui()
 
     def _on_reset(self):
         self._following = False
@@ -315,6 +316,35 @@ class Extension(omni.ext.IExt):
             self._reset_btn.enabled = False
             self._editor.stop()
             self._stop_tasks()
+
+    def _on_update_ui(self):
+        """Callback that updates UI elements every frame
+        """
+        if self._created:
+            self._create_robot_btn.enabled = True
+            self._target_following_btn.enabled = False
+            self._add_object_btn.enabled = False
+            self._gripper_btn.enabled = False
+            self._reset_pose_btn.enabled = False
+            self._reset_btn.enabled = False
+            if self._editor.is_playing():
+                self._reset_pose_btn.enabled = True
+                self._target_following_btn.enabled = True
+                self._target_following_btn.text = "Follow Target"
+                self._add_object_btn.enabled = True
+                self._gripper_btn.enabled = True
+                self._reset_btn.enabled = True
+                if self._gripper_open:
+                    self._gripper_btn.text = "Press to Close Gripper"
+                else:
+                    self._gripper_btn.text = "Press to Open Gripper"
+            else:
+                self._target_following_btn.enabled = False
+                self._target_following_btn.text = "Press Play To Enable"
+
+        else:
+            self._create_robot_btn.enabled = True
+            self._target_following_btn.text = "Press Create To Enable"
 
     def on_shutdown(self):
         """Cleanup objects on extension shutdown
