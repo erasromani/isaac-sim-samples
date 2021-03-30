@@ -148,7 +148,6 @@ class Extension(omni.ext.IExt):
         create_prim_from_usd(self._stage, robot_path, robot_usd, Gf.Vec3d(0, 0, 0))
 
         self.objects = [
-            nucleus_server + "/Objects/sqbowl.usd",
             asset_path + "/Props/Flip_Stack/large_corner_bracket_physics.usd",
             asset_path + "/Props/Flip_Stack/screw_95_physics.usd",
             asset_path + "/Props/Flip_Stack/screw_99_physics.usd",
