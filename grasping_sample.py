@@ -317,7 +317,7 @@ class Extension(omni.ext.IExt):
                 self._target = {
                                 "orig": np.array([target_pos[0], target_pos[1], target_pos[2]]) * self._meters_per_unit, 
                                 "axis_z": np.array([0.0, 0.0, -1.0]), 
-                                "axis_y": np.array([math.sin(target_rot[2]), math.cost(target_rot[2]), 0.0]),
+                                "axis_y": np.array([math.sin(target_rot[2]), math.cos(target_rot[2]), 0.0]),
                                 }
                 self._robot.end_effector.go_local(target=self._target, use_default_config=True, wait_for_target=True)
                 self.goal_coord["X"].model.set_value(target_pos[0])
