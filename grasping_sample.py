@@ -341,7 +341,6 @@ class Extension(omni.ext.IExt):
 
         # put target back (a visual prim) in position
         if self._target:
-            self._target_following_btn.text = "It went through!"
             for axis in self.goal_coord:
                 self.goal_coord[axis].model.set_value(self.default_goal_coord[axis])
             self.goal_angle.model.set_value(self.default_goal_angle)           
