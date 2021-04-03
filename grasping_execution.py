@@ -87,12 +87,14 @@ class Extension(omni.ext.IExt):
         self._settings.set("/persistent/physics/useFastCache", True)
         self._settings.set("/persistent/physics/numThreads", 8)
 
+        self._appwindow = omni.appwindow.get_default_app_window()
+        self._input = carb.input.acquire_input_interface()
+        self._keyboard = self._appwindow.get_keyboard()
+        self._sub_keyboard = self._input.subscribe_to_keyboard_events(self._keyboard, self._sub_keyboard_event)
         self._sub_stage_event = self._usd_context.get_stage_event_stream().create_subscription_to_pop(
             self._on_stage_event
         )
-        # self._termination_criteria = FrameTerminationCriteria(orig_thresh=0.001)
-
-        # self._scenario = Scenario(self._editor, self._dc, self._mp)
+        self._scenario = Scenario(self._editor, self._dc, self._mp)
 
         ## unit conversions: RMP is in meters, kit is by default in cm
         self._meters_per_unit = UsdGeom.GetStageMetersPerUnit(self._stage)
