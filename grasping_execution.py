@@ -92,7 +92,7 @@ class Extension(omni.ext.IExt):
         )
         # self._termination_criteria = FrameTerminationCriteria(orig_thresh=0.001)
 
-        self._scenario = Scenario(self._editor, self._dc, self._mp)
+        # self._scenario = Scenario(self._editor, self._dc, self._mp)
 
         ## unit conversions: RMP is in meters, kit is by default in cm
         self._meters_per_unit = UsdGeom.GetStageMetersPerUnit(self._stage)
