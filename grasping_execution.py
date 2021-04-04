@@ -74,8 +74,6 @@ class Extension(omni.ext.IExt):
         self._open_gripper_btn.enabled = False
         self._open_gripper_open = False
 
-        self._ar = _dynamic_control.INVALID_HANDLE
-
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
         self._reset_btn.set_clicked_fn(self._on_reset)
         self._reset_btn.enabled = False
@@ -145,6 +143,16 @@ class Extension(omni.ext.IExt):
         self._pause_task_btn.enabled = True
         self._add_object_btn.enabled = True
 
+    def _sub_keyboard_event(self, event, *args, **kwargs):
+        if event.type == carb.input.KeyboardEventType.KEY_PRESS:
+            if event.input == carb.input.KeyboardInput.KEY_1:
+                self._on_perform_task()
+            if event.input == carb.input.KeyboardInput.KEY_2:
+                self._on_pause_tasks()
+            if event.input == carb.input.KeyboardInput.KEY_3:
+                self._on_add_bin()
+        return True
+
     def _on_stop_tasks(self, *args):
         self._scenario.stop_tasks()
 
@@ -170,7 +178,6 @@ class Extension(omni.ext.IExt):
         self.stage = self._usd_context.get_stage()
         if event.type == int(omni.usd.StageEventType.OPENED):
             self._create_UR10_btn.enabled = True
-            self._selected_scenario.enabled = True
             self._perform_task_btn.enabled = False
             self._stop_task_btn.enabled = False
             self._pause_task_btn.enabled = False
