@@ -149,7 +149,7 @@ class GraspObject(Scenario):
 
         ## register robot with RMP
         robot_path = "/scene/robot"
-        self._robot = Franka(
+        self.franka_solid = Franka(
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self._world, default_config
         )
 
