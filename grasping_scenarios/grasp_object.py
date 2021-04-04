@@ -186,7 +186,7 @@ class GraspObject(Scenario):
             selection = omni.usd.get_context().get_selection()
             selection.set_selected_prim_paths(["/scene/target"], False)
             target = self._stage.GetPrimAtPath("/scene/target")
-            xform_attr = target.GetAttribute("xformOp:transform")
+            xform_attr = target.GetAttribute("xformOp:translate")
             translate_attr = np.array(xform_attr.Get().GetRow3(3))
             if np.linalg.norm(translate_attr) < 0.01:
                 p = self.default_position.p
