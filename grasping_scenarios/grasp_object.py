@@ -93,10 +93,6 @@ class GraspObject(Scenario):
     def on_startup(self):
         super().on_startup()
 
-    # TODO: update method
-    def step(self, step):
-        pass
-
     def create_franka(self, *args):
         super().create_franka()
         if self.asset_path is None:
@@ -124,12 +120,11 @@ class GraspObject(Scenario):
 
         target_geom = UsdGeom.Sphere.Define(self._stage, target_path)
         offset = Gf.Vec3f(30, 0, 30)  ## these are in cm
-        rotate = Gf.Vec3d(0.0, 0, 0)
+        rotate = Gf.Vec3f(0.0, 0, 0)
         colors = Gf.Vec3f(1.0, 0, 0)
         target_size = 3
-        # self.default_position = _dynamic_control.Transform()
-        # self.default_position.p = offset
-        # self.default_position.r = 
+        self.default_position = _dynamic_control.Transform()
+        self.default_position.p = offset
         target_geom.CreateRadiusAttr(target_size)
         target_geom.AddTranslateOp().Set(offset)
         target_geom.AddRotateZYXOp().Set(rotate)
@@ -177,12 +172,27 @@ class GraspObject(Scenario):
         return False
 
     # TODO: update method
+    def step(self, step):
+        pass
+
+    # TODO: update method
     def stop_tasks(self, *args):
         pass
 
     # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
+        if self._paused:
+            selection = omni.usd.get_context().get_selection()
+            selection.set_selected_prim_paths(["/scene/target"], False)
+            target = self._stage.GetPrimAtPath("/scene/target")
+            xform_attr = target.GetAttribute("xformOp:transform")
+            translate_attr = np.array(xform_attr.Get().GetRow3(3))
+            if np.linalg.norm(translate_attr) < 0.01:
+                p = self.default_position.p
+                r = self.default_position.r
+                set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+                set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
         return self._paused
 
     def open_gripper(self):
