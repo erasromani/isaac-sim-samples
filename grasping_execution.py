@@ -179,7 +179,7 @@ class Extension(omni.ext.IExt):
     def _on_stage_event(self, event):
         self.stage = self._usd_context.get_stage()
         if event.type == int(omni.usd.StageEventType.OPENED):
-            self._create_UR10_btn.enabled = True
+            self._create_franka_btn.enabled = True
             self._perform_task_btn.enabled = False
             self._stop_task_btn.enabled = False
             self._pause_task_btn.enabled = False
