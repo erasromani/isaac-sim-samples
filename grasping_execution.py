@@ -118,8 +118,8 @@ class Extension(omni.ext.IExt):
         self._stage = self._usd_context.get_stage()
         self._scenario = GraspObject(self._editor, self._dc, self._mp)
 
-        self._editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
-        self._editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
+        # self._editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
+        # self._editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
 
         self._first_step = True
 
