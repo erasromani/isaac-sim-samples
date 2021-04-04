@@ -153,8 +153,7 @@ class Extension(omni.ext.IExt):
         self._stop_task_btn.enabled = True
 
     def _on_open_gripper(self, *args):
-        # self._scenario.open_gripper()
-        pass
+        self._scenario.open_gripper()
 
     def _on_add_bin(self, *args):
         # self._scenario.add_bin()
