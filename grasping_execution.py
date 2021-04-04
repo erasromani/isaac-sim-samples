@@ -64,7 +64,7 @@ class Extension(omni.ext.IExt):
         self._pause_task_btn.enabled = False
         
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
-        # self._add_object_btn.set_clicked_fn(self._on_add_object)
+        self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
         self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
 
