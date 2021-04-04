@@ -69,7 +69,7 @@ class Extension(omni.ext.IExt):
         self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
 
         self._open_gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
-        #self._open_gripper_btn.set_clicked_fn(self._on_open_gripper)
+        self._open_gripper_btn.set_clicked_fn(self._on_open_gripper)
         self._open_gripper_btn.enabled = False
 
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
@@ -202,7 +202,7 @@ class Extension(omni.ext.IExt):
 
         if self._editor.is_playing() or self._scenario.is_created():
             self._perform_task_btn.enabled = self._scenario._paused
-            #self._open_gripper_btn.enabled = True
+            self._open_gripper_btn.enabled = True
             self._add_object_btn.enabled = True
             self._perform_task_btn.text = "Perform Task"
             if not self._scenario.is_created():
@@ -210,7 +210,7 @@ class Extension(omni.ext.IExt):
                 self._perform_task_btn.text = "Press Create To Enable"
         if not self._editor.is_playing():
             self._perform_task_btn.enabled = False
-            #self._open_gripper_btn.enabled = False
+            self._open_gripper_btn.enabled = False
             self._add_object_btn.enabled = False
             self._perform_task_btn.text = "Press Play To Enable"
             if not self._scenario.is_created():
