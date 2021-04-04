@@ -20,7 +20,7 @@ from omni.isaac.samples.scripts.utils.world import World
 from omni.isaac.samples.scripts.utils.ur10 import UR10, default_config
 from omni.isaac.utils._isaac_utils.surface_grippers import Surface_Gripper_Properties
 
-from .scenario import set_translate, set_rotate, create_ur10, Scenario, create_objects, setup_physics
+from .scenario import set_translate, set_rotate, create_franka, Scenario, setup_physics
 from copy import copy
 
 from omni.physx import _physx
