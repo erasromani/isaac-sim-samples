@@ -17,8 +17,7 @@ import carb
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
-from omni.isaac.samples.scripts.utils.ur10 import UR10, default_config
-from omni.isaac.utils._isaac_utils.surface_grippers import Surface_Gripper_Properties
+from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 
 from .scenario import set_translate, set_rotate, create_franka, Scenario, setup_physics
 from copy import copy
