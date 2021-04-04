@@ -64,7 +64,7 @@ class Extension(omni.ext.IExt):
         self._pause_task_btn.enabled = False
         
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
-        #self._add_object_btn.set_clicked_fn(self._on_add_object)
+        self._add_object_btn.set_clicked_fn(self._on_add_bin)
         self._add_object_btn.enabled = False
         self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
 
@@ -155,8 +155,7 @@ class Extension(omni.ext.IExt):
         self._scenario.open_gripper()
 
     def _on_add_bin(self, *args):
-        # self._scenario.add_bin()
-        pass
+        self._scenario.add_bin()
 
     def _sub_keyboard_event(self, event, *args, **kwargs):
         if event.type == carb.input.KeyboardEventType.KEY_PRESS:
