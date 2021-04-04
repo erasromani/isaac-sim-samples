@@ -178,7 +178,7 @@ class Extension(omni.ext.IExt):
             self._scenario.step(step)
 
     def _on_stage_event(self, event):
-        self.stage = self._usd_context.get_stage()
+        self._stage = self._usd_context.get_stage()
         if event.type == int(omni.usd.StageEventType.OPENED):
             self._create_franka_btn.enabled = True
             self._perform_task_btn.enabled = False
