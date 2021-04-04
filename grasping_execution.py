@@ -13,6 +13,7 @@ import omni.ext
 import omni.kit.ui
 import omni.kit.settings
 
+from pxr import Gf, UsdGeom
 from omni.isaac.motion_planning import _motion_planning
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.physx import _physx
