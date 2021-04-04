@@ -19,7 +19,7 @@ from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
 from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 
-from .scenario import set_translate, set_rotate, create_franka, Scenario, setup_physics
+from .scenario import set_translate, set_rotate, create_solid_franka, Scenario, setup_physics
 from copy import copy
 
 from omni.physx import _physx
