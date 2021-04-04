@@ -6,15 +6,12 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import carb
-import numpy as np
-from pxr import Usd, UsdGeom, Gf, PhysicsSchema, PhysxSchema, Sdf, UsdLux
+import carb.input
+import omni.kit.commands
 import omni.kit.editor
 import omni.ext
-import omni.usd
 import omni.kit.ui
 import omni.kit.settings
-import asyncio
 
 from omni.isaac.motion_planning import _motion_planning
 from omni.isaac.dynamic_control import _dynamic_control
@@ -22,6 +19,7 @@ from omni.physx import _physx
 
 from .franka_scenarios.scenario import Scenario
 
+import asyncio
 
 EXTENSION_NAME = "Grasping Execution"
 
@@ -65,17 +63,17 @@ class Extension(omni.ext.IExt):
         self._pause_task_btn.enabled = False
         
         self._add_object_btn = self._window.layout.add_child(omni.kit.ui.Button("Add Object"))
-        self._add_object_btn.set_clicked_fn(self._on_add_object)
+        # self._add_object_btn.set_clicked_fn(self._on_add_object)
         self._add_object_btn.enabled = False
         self._add_object_btn.tooltip = omni.kit.ui.Label("Drop randomly selected object in scene")
 
         self._open_gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
-        self._open_gripper_btn.set_clicked_fn(self._on_toggle_gripper)
+        self._open_gripper_btn.set_clicked_fn(self._on_open_gripper)
         self._open_gripper_btn.enabled = False
         self._open_gripper_open = False
 
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
-        self._reset_btn.set_clicked_fn(self._on_reset)
+        # self._reset_btn.set_clicked_fn(self._on_reset)
         self._reset_btn.enabled = False
         self._reset_btn.tooltip = omni.kit.ui.Label("Reset robot and target to default positions")
 
@@ -163,10 +161,12 @@ class Extension(omni.ext.IExt):
         self._stop_task_btn.enabled = True
 
     def _on_open_gripper(self, *args):
-        self._scenario.open_gripper()
+        # self._scenario.open_gripper()
+        pass
 
     def _on_add_bin(self, *args):
-        self._scenario.add_bin()
+        # self._scenario.add_bin()
+        pass
 
     def _on_editor_step(self, step):
         if self._editor.is_playing():
