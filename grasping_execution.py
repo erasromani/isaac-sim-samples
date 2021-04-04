@@ -138,7 +138,7 @@ class Extension(omni.ext.IExt):
         self._editor_event_subscription = self._editor.subscribe_to_update_events(self._on_editor_step)
         self._physxIFace.release_physics_objects()
         self._physxIFace.force_load_physics_from_usd()
-        self._reset_btn.enabled = True
+        # self._reset_btn.enabled = True
         self._stop_task_btn.enabled = True
         self._pause_task_btn.enabled = True
         self._add_object_btn.enabled = True
