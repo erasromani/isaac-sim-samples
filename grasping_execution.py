@@ -119,8 +119,8 @@ class Extension(omni.ext.IExt):
         self._stage = self._usd_context.get_stage()
         self._scenario = GraspObject(self._editor, self._dc, self._mp)
 
-        # self._editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
-        # self._editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
+        self._editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
+        self._editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
 
         self._first_step = True
 
@@ -131,7 +131,7 @@ class Extension(omni.ext.IExt):
         self._settings.set("/rtx/shadows/denoiser/quarterRes", True)
         self._settings.set("/rtx/translucency/reflectionCutoff", 0.1)
 
-        # self._scenario.create_franka()
+        self._scenario.create_franka()
 
         self._physxIFace.release_physics_objects()
         self._physxIFace.force_load_physics_from_usd()
@@ -143,16 +143,6 @@ class Extension(omni.ext.IExt):
         self._stop_task_btn.enabled = True
         self._pause_task_btn.enabled = True
         self._add_object_btn.enabled = True
-
-    def _sub_keyboard_event(self, event, *args, **kwargs):
-        if event.type == carb.input.KeyboardEventType.KEY_PRESS:
-            if event.input == carb.input.KeyboardInput.KEY_1:
-                self._on_perform_task()
-            if event.input == carb.input.KeyboardInput.KEY_2:
-                self._on_pause_tasks()
-            if event.input == carb.input.KeyboardInput.KEY_3:
-                self._on_add_bin()
-        return True
 
     def _on_stop_tasks(self, *args):
         self._scenario.stop_tasks()
@@ -169,6 +159,16 @@ class Extension(omni.ext.IExt):
     def _on_add_bin(self, *args):
         # self._scenario.add_bin()
         pass
+
+    def _sub_keyboard_event(self, event, *args, **kwargs):
+        if event.type == carb.input.KeyboardEventType.KEY_PRESS:
+            if event.input == carb.input.KeyboardInput.KEY_1:
+                self._on_perform_task()
+            if event.input == carb.input.KeyboardInput.KEY_2:
+                self._on_pause_tasks()
+            if event.input == carb.input.KeyboardInput.KEY_3:
+                self._on_add_bin()
+        return True
 
     def _on_editor_step(self, step):
         if self._editor.is_playing():

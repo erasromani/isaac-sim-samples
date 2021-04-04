@@ -174,6 +174,7 @@ class GraspObject(Scenario):
     
     def pause_tasks(self, *args):
         self._paused = not self._paused
+        return self._paused
 
     def open_gripper(self):
         if self.franka_solid.end_effector.gripper.is_closed():
