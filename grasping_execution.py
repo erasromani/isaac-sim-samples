@@ -106,11 +106,11 @@ class Extension(omni.ext.IExt):
     def _on_environment_setup(self, widget):
         # wait for new stage before creating franka
         task = asyncio.ensure_future(omni.kit.asyncapi.new_stage())
-        # asyncio.ensure_future(self._on_create_robot(task))
+        asyncio.ensure_future(self._on_create_robot(task))
         self._create_franka_btn.text = "Clear Scenario"
         self._create_franka_btn.set_clicked_fn(self._on_clear_scenario)
 
-    async def _on_create_root(self, task):
+    async def _on_create_robot(self, task):
 
         done, pending = await asyncio.wait({task})
         if task not in done:
