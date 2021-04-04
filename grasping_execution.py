@@ -72,11 +72,6 @@ class Extension(omni.ext.IExt):
         self._open_gripper_btn.set_clicked_fn(self._on_open_gripper)
         self._open_gripper_btn.enabled = False
 
-        # self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
-        # self._reset_btn.set_clicked_fn(self._on_reset)
-        # self._reset_btn.enabled = False
-        # self._reset_btn.tooltip = omni.kit.ui.Label("Reset robot and target to default positions")
-
         self._settings = omni.kit.settings.get_settings_interface()
 
         self._settings.set("/persistent/physics/updateToUsd", False)
@@ -138,7 +133,6 @@ class Extension(omni.ext.IExt):
         self._editor_event_subscription = self._editor.subscribe_to_update_events(self._on_editor_step)
         self._physxIFace.release_physics_objects()
         self._physxIFace.force_load_physics_from_usd()
-        # self._reset_btn.enabled = True
         self._stop_task_btn.enabled = True
         self._pause_task_btn.enabled = True
         self._add_object_btn.enabled = True
