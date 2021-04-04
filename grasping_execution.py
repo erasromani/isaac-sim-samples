@@ -71,7 +71,6 @@ class Extension(omni.ext.IExt):
         self._open_gripper_btn = self._window.layout.add_child(omni.kit.ui.Button("Toggle Gripper"))
         self._open_gripper_btn.set_clicked_fn(self._on_open_gripper)
         self._open_gripper_btn.enabled = False
-        self._open_gripper_open = False
 
         self._reset_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Scene"))
         # self._reset_btn.set_clicked_fn(self._on_reset)
