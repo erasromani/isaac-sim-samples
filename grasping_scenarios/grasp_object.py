@@ -118,12 +118,8 @@ class GraspObject(Scenario):
         if self._stage.GetPrimAtPath(target_path):
             return
 
-        goal_x = self.goal_coord["X"].model.get_value_as_float()
-        goal_y = self.goal_coord["Y"].model.get_value_as_float()
-        goal_z = self.goal_coord["Z"].model.get_value_as_float()
-
         target_geom = UsdGeom.Sphere.Define(self._stage, target_path)
-        offset = Gf.Vec3f(goal_x, goal_y, goal_z)  ## these are in cm
+        offset = Gf.Vec3f(30, 0, 30)  ## these are in cm
         rotate = Gf.Vec3d(0.0, 0, 0)
         colors = Gf.Vec3f(1.0, 0, 0)
         target_size = 3
