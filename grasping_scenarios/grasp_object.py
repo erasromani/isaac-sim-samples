@@ -93,6 +93,7 @@ class GraspObject(Scenario):
     def on_startup(self):
         super().on_startup()
 
+    # TODO: update method
     def step(self, step):
         pass
 
@@ -126,6 +127,9 @@ class GraspObject(Scenario):
         rotate = Gf.Vec3d(0.0, 0, 0)
         colors = Gf.Vec3f(1.0, 0, 0)
         target_size = 3
+        # self.default_position = _dynamic_control.Transform()
+        # self.default_position.p = offset
+        # self.default_position.r = 
         target_geom.CreateRadiusAttr(target_size)
         target_geom.AddTranslateOp().Set(offset)
         target_geom.AddRotateZYXOp().Set(rotate)
@@ -172,9 +176,11 @@ class GraspObject(Scenario):
         self._paused = False
         return False
 
+    # TODO: update method
     def stop_tasks(self, *args):
         pass
-    
+
+    # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
         return self._paused

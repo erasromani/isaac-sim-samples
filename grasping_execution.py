@@ -156,8 +156,7 @@ class Extension(omni.ext.IExt):
         self._scenario.open_gripper()
 
     def _on_add_bin(self, *args):
-        # self._scenario.add_bin()
-        pass
+        self._scenario.add_bin()
 
     def _sub_keyboard_event(self, event, *args, **kwargs):
         if event.type == carb.input.KeyboardEventType.KEY_PRESS:
