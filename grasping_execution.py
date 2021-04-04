@@ -130,7 +130,7 @@ class Extension(omni.ext.IExt):
         self._settings.set("/rtx/shadows/denoiser/quarterRes", True)
         self._settings.set("/rtx/translucency/reflectionCutoff", 0.1)
 
-        self._scenario.create_franka()
+        # self._scenario.create_franka()
 
         self._physxIFace.release_physics_objects()
         self._physxIFace.force_load_physics_from_usd()
