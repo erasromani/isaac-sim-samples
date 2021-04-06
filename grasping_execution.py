@@ -147,10 +147,6 @@ class Extension(omni.ext.IExt):
 
     def _on_open_gripper(self, *args):
         self._scenario.open_gripper()
-        if self._scenario._gripper_open:
-            self._open_gripper_btn.text = "Press to Close Gripper"
-        else:
-            self._open_gripper_btn.text = "Press to Open Gripper"
 
     def _on_add_bin(self, *args):
         self._scenario.add_bin()
@@ -206,6 +202,11 @@ class Extension(omni.ext.IExt):
             if not self._scenario.is_created():
                 self._perform_task_btn.enabled = False
                 self._perform_task_btn.text = "Press Create To Enable"
+            else:
+                if self._scenario._gripper_open:
+                    self._open_gripper_btn.text = "Press to Close Gripper"
+                else:
+                    self._open_gripper_btn.text = "Press to Open Gripper"
         if not self._editor.is_playing():
             self._perform_task_btn.enabled = False
             self._open_gripper_btn.enabled = False
