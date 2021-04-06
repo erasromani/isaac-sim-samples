@@ -144,12 +144,12 @@ class GraspObject(Scenario):
     def register_assets(self, *args):
 
         ## register world with RMP
-        self._world =  World(self._dc, self._mp)
+        self.world =  World(self._dc, self._mp)
 
         ## register robot with RMP
         robot_path = "/scene/robot"
         self.franka_solid = Franka(
-            self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self._world, default_config
+            self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
         )
 
         # register objects
