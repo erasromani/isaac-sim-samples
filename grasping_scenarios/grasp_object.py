@@ -226,7 +226,7 @@ class GraspObject(Scenario):
                 axis_x = np.array(rotate_x)
                 axis_y = np.array(rotate_y)
                 axis_z = np.array(rotate_z)
-                self.ur10_solid.end_effector.go_local(
+                self.franka_solid.end_effector.go_local(
                     orig=orig,
                     axis_x=axis_x,
                     axis_y=axis_y,
