@@ -21,7 +21,7 @@ from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
 from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 
-from .scenario import set_translate, Scenario, setup_physics
+from .scenario import set_translate, set_rotate, Scenario, setup_physics
 from copy import copy
 
 from omni.physx import _physx
@@ -118,17 +118,14 @@ class GraspObject(Scenario):
         if self._stage.GetPrimAtPath(target_path):
             return
 
-        target_geom = UsdGeom.Sphere.Define(self._stage, target_path)
-        offset = Gf.Vec3f(30, 0, 30)  ## these are in cm
-        rotate = Gf.Vec3f(0.0, 0, 0)
-        colors = Gf.Vec3f(1.0, 0, 0)
-        target_size = 3
+        GoalPrim = self._stage.DefinePrim(target_path, "Xform")
         self.default_position = _dynamic_control.Transform()
-        self.default_position.p = offset
-        target_geom.CreateRadiusAttr(target_size)
-        target_geom.AddTranslateOp().Set(offset)
-        target_geom.AddRotateZYXOp().Set(rotate)
-        target_geom.CreateDisplayColorAttr().Set([colors])
+        self.default_position.p = [0.3, 0.0, 0.3]
+        self.default_position.r = [0.0, 0.0, 0.0, 1.0]
+        p = self.default_position.p
+        r = self.default_position.r
+        set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+        set_rotate(GoalPrim, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
 
         # Setup physics simulation
         add_ground_plane(self._stage, "/groundPlane", "Z", 1000.0, Gf.Vec3f(0.0), Gf.Vec3f(1.0))
@@ -197,7 +194,7 @@ class GraspObject(Scenario):
                     set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
                     set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
                 else:
-                    state = self.ur10_solid.end_effector.status.current_target
+                    state = self.franka_solid.end_effector.status.current_target
                     state_1 = self.pick_and_place.target_position
                     tr = state["orig"] * 100.0
                     set_translate(target, Gf.Vec3d(tr[0], tr[1], tr[2]))
@@ -208,16 +205,16 @@ class GraspObject(Scenario):
                     self.add_objects_timeout -= 1
                     if self.add_objects_timeout == 0:
                         self.create_new_objects()
-                if (
-                    self.pick_and_place.current_state == self.current_state
-                    and self.current_state in [SM_states.PICKING, SM_states.ATTACH]
-                    and (self._time - self._start_time) > self.timeout_max
-                ):
-                    self.stop_tasks()
-                elif self.pick_and_place.current_state != self.current_state:
-                    self._start_time = self._time
-                    print(self._time)
-                    self.current_state = self.pick_and_place.current_state
+                # if (
+                #     self.pick_and_place.current_state == self.current_state
+                #     and self.current_state in [SM_states.PICKING, SM_states.ATTACH]
+                #     and (self._time - self._start_time) > self.timeout_max
+                # ):
+                #     self.stop_tasks()
+                # elif self.pick_and_place.current_state != self.current_state:
+                #     self._start_time = self._time
+                #     print(self._time)
+                #     self.current_state = self.pick_and_place.current_state
 
             if self._paused:
                 translate_attr = xform_attr.Get().GetRow3(3)

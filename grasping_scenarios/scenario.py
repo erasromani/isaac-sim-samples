@@ -43,6 +43,22 @@ def set_translate(prim, new_loc):
         xform_op.Set(Gf.Matrix4d().SetTranslate(new_loc))
 
 
+def set_rotate(prim, rot_mat):
+    properties = prim.GetPropertyNames()
+    if "xformOp:rotate" in properties:
+        rotate_attr = prim.GetAttribute("xformOp:rotate")
+        rotate_attr.Set(rot_mat)
+    elif "xformOp:transform" in properties:
+        transform_attr = prim.GetAttribute("xformOp:transform")
+        matrix = prim.GetAttribute("xformOp:transform").Get()
+        matrix.SetRotateOnly(rot_mat.ExtractRotation())
+        transform_attr.Set(matrix)
+    else:
+        xform = UsdGeom.Xformable(prim)
+        xform_op = xform.AddXformOp(UsdGeom.XformOp.TypeTransform, UsdGeom.XformOp.PrecisionDouble, "")
+        xform_op.Set(Gf.Matrix4d().SetRotate(rot_mat))
+
+
 # Specify collision group for a prim
 def set_collision_group(stage, path, group):
     collisionAPI = PhysicsSchema.CollisionAPI.Get(stage, path)
