@@ -173,7 +173,71 @@ class GraspObject(Scenario):
 
     # TODO: update method
     def step(self, step):
-        pass
+        if self._editor.is_playing():
+            if self._pending_stop:
+                self.stop_tasks()
+                return
+            # Updates current references and locations for the robot.
+            self.world.update()
+            self.franka_solid.update()
+
+            target = self._stage.GetPrimAtPath("/scene/target")
+            xform_attr = target.GetAttribute("xformOp:transform")
+            if self._reset:
+                self._paused = False
+            if not self._paused:
+                self._time += 1.0 / 60.0
+                # self.pick_and_place.step(self._time, self._start, self._reset)
+                if self._reset:
+                    self._paused = (self._time - self._start_time) < self.timeout_max
+                    self._time = 0
+                    self._start_time = 0
+                    p = self.default_position.p
+                    r = self.default_position.r
+                    set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+                    set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
+                else:
+                    state = self.ur10_solid.end_effector.status.current_target
+                    state_1 = self.pick_and_place.target_position
+                    tr = state["orig"] * 100.0
+                    set_translate(target, Gf.Vec3d(tr[0], tr[1], tr[2]))
+                    set_rotate(target, Gf.Matrix3d(Gf.Quatd(state_1.r.w, state_1.r.x, state_1.r.y, state_1.r.z)))
+                self._start = False
+                self._reset = False
+                if self.add_objects_timeout > 0:
+                    self.add_objects_timeout -= 1
+                    if self.add_objects_timeout == 0:
+                        self.create_new_objects()
+                if (
+                    self.pick_and_place.current_state == self.current_state
+                    and self.current_state in [SM_states.PICKING, SM_states.ATTACH]
+                    and (self._time - self._start_time) > self.timeout_max
+                ):
+                    self.stop_tasks()
+                elif self.pick_and_place.current_state != self.current_state:
+                    self._start_time = self._time
+                    print(self._time)
+                    self.current_state = self.pick_and_place.current_state
+
+            if self._paused:
+                translate_attr = xform_attr.Get().GetRow3(3)
+                rotate_x = xform_attr.Get().GetRow3(0)
+                rotate_y = xform_attr.Get().GetRow3(1)
+                rotate_z = xform_attr.Get().GetRow3(2)
+
+                orig = np.array(translate_attr) / 100.0
+                axis_x = np.array(rotate_x)
+                axis_y = np.array(rotate_y)
+                axis_z = np.array(rotate_z)
+                self.ur10_solid.end_effector.go_local(
+                    orig=orig,
+                    axis_x=axis_x,
+                    axis_y=axis_y,
+                    axis_z=axis_z,
+                    use_default_config=True,
+                    wait_for_target=False,
+                    wait_time=5.0,
+                )
 
     # TODO: update method
     def stop_tasks(self, *args):
@@ -182,17 +246,17 @@ class GraspObject(Scenario):
     # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
-        if self._paused:
-            selection = omni.usd.get_context().get_selection()
-            selection.set_selected_prim_paths(["/scene/target"], False)
-            target = self._stage.GetPrimAtPath("/scene/target")
-            xform_attr = target.GetAttribute("xformOp:translate")
-            translate_attr = np.array(xform_attr.Get().GetRow3(3))
-            if np.linalg.norm(translate_attr) < 0.01:
-                p = self.default_position.p
-                r = self.default_position.r
-                set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
-                set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
+        # if self._paused:
+        #     selection = omni.usd.get_context().get_selection()
+        #     selection.set_selected_prim_paths(["/scene/target"], False)
+        #     target = self._stage.GetPrimAtPath("/scene/target")
+        #     xform_attr = target.GetAttribute("xformOp:translate")
+        #     translate_attr = np.array(xform_attr.Get().GetRow3(3))
+        #     if np.linalg.norm(translate_attr) < 0.01:
+        #         p = self.default_position.p
+        #         r = self.default_position.r
+        #         set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+        #         set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
         return self._paused
 
     def open_gripper(self):
