@@ -121,7 +121,7 @@ class GraspObject(Scenario):
         GoalPrim = self._stage.DefinePrim(target_path, "Xform")
         self.default_position = _dynamic_control.Transform()
         self.default_position.p = [0.3, 0.0, 0.3]
-        self.default_position.r = [0.0, 0.0, 0.0, 1.0]
+        self.default_position.r = [0.0, 0.0, 0.0, -1.0]
         p = self.default_position.p
         r = self.default_position.r
         set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
