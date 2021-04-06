@@ -147,6 +147,10 @@ class Extension(omni.ext.IExt):
 
     def _on_open_gripper(self, *args):
         self._scenario.open_gripper()
+        if self._scenario._gripper_open:
+            self._open_gripper_btn.text = "Press to Close Gripper"
+        else:
+            self._open_gripper_btn.text = "Press to Open Gripper"
 
     def _on_add_bin(self, *args):
         self._scenario.add_bin()
