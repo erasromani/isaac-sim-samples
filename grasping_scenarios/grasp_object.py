@@ -76,7 +76,7 @@ class GraspObject(Scenario):
         self.pick_and_place = None
         self._pending_disable = False
         self._pending_stop = False
-        self._gripper_open = True
+        self._gripper_open = False
 
         self.current_obj = 0
         self.max_objs = 100
