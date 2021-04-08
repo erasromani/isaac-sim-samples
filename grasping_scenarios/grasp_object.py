@@ -114,10 +114,10 @@ class PickAndPlaceStateMachine(object):
 
         # Fill in the functions to handle each event for each status
         self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
-        self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
-        # self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
+        self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
         self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
         self.thresh[SM_states.PICKING] = 1
 
@@ -354,14 +354,13 @@ class PickAndPlaceStateMachine(object):
         # Move to next state
         self.change_state(SM_states.PICKING)
 
-    def _standby_goal_reached(self, *args):
-        """
-        Finished processing a bin, moves up the stack position for next bin placement
-        """
-        self.move_to_zero()
-        self.start = True
-        carb.log_warn('goal reached!')
-
+    # NOTE: As is, this method is never executed
+    # def _standby_goal_reached(self, *args):
+    #     """
+    #     Finished processing a bin, moves up the stack position for next bin placement
+    #     """
+    #     self.move_to_zero()
+    #     self.start = True
 
     # def _attach_goal_reached(self, *args):
     #     """
@@ -394,30 +393,31 @@ class PickAndPlaceStateMachine(object):
     #     self.move_to_target()
     #     self.change_state(SM_states.HOLDING)
 
-    # def _picking_goal_reached(self, *args):
-    #     """
-    #     Handles a state machine step when goal was reached event happens, while on picking state
-    #     ensures the bin obstacle is suppressed for the planner, Updates the target position
-    #     to where the bin surface is, and send the robot to move towards it. No change of state happens
-    #     """
-    #     obj, distance = self.ray_cast()
-    #     if obj is not None:
-    #         # Set target towards surface of the bin
-    #         tr = self.get_current_state_tr()
-    #         offset = _dynamic_control.Transform()
-    #         offset.p = (distance + 0.15, 0, 0)
+    def _picking_goal_reached(self, *args):
+        """
+        Handles a state machine step when goal was reached event happens, while on picking state
+        ensures the bin obstacle is suppressed for the planner, Updates the target position
+        to where the bin surface is, and send the robot to move towards it. No change of state happens
+        """
+        # obj, distance = self.ray_cast()
+        # if obj is not None:
+        #     # Set target towards surface of the bin
+        #     tr = self.get_current_state_tr()
+        #     offset = _dynamic_control.Transform()
+        #     offset.p = (distance + 0.15, 0, 0)
 
-    #         target = math_utils.mul(tr, offset)
-    #         target.p = math_utils.mul(target.p, 0.01)
-    #         offset.p.x = -0.05
+        #     target = math_utils.mul(tr, offset)
+        #     target.p = math_utils.mul(target.p, 0.01)
+        #     offset.p.x = -0.05
 
-    #         pre_target = math_utils.mul(target, offset)
-    #         self.lerp_to_pose(pre_target, n_waypoints=40)
-    #         self.lerp_to_pose(target, n_waypoints=30)
-    #         self.lerp_to_pose(target, n_waypoints=30)
-    #         self.target_position = self.waypoints.popleft()
-    #         self.move_to_target()
-    #         self.change_state(SM_states.ATTACH)
+        #     pre_target = math_utils.mul(target, offset)
+        #     self.lerp_to_pose(pre_target, n_waypoints=40)
+        #     self.lerp_to_pose(target, n_waypoints=30)
+        #     self.lerp_to_pose(target, n_waypoints=30)
+        #     self.target_position = self.waypoints.popleft()
+        #     self.move_to_target()
+        #     self.change_state(SM_states.ATTACH)
+        carb.log_warn('picking_goal_reached')
 
     def _picking_no_event(self, *args):
         """
