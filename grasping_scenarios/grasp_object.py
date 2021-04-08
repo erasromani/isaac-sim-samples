@@ -114,12 +114,12 @@ class PickAndPlaceStateMachine(object):
 
         # Fill in the functions to handle each event for each status
         self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
-        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
         # self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
-        # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
-        # self.thresh[SM_states.PICKING] = 1
+        self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
+        self.thresh[SM_states.PICKING] = 1
 
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
@@ -346,18 +346,18 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 90)
         # set target above the current bin with offset of 20 cm
-        self.set_target_to_object(25, 25, 6, clear_waypoints=False)
+        self.set_target_to_object(0, 0, 6, clear_waypoints=False)
         # start arm movement
         self.move_to_target()
         # Move to next state
         self.change_state(SM_states.PICKING)
 
-    # def _standby_goal_reached(self, *args):
-    #     """
-    #     Finished processing a bin, moves up the stack position for next bin placement
-    #     """
-    #     self.move_to_zero()
-    #     self.start = True
+    def _standby_goal_reached(self, *args):
+        """
+        Finished processing a bin, moves up the stack position for next bin placement
+        """
+        self.move_to_zero()
+        self.start = True
 
     # def _attach_goal_reached(self, *args):
     #     """
@@ -415,14 +415,14 @@ class PickAndPlaceStateMachine(object):
     #         self.move_to_target()
     #         self.change_state(SM_states.ATTACH)
 
-    # def _picking_no_event(self, *args):
-    #     """
-    #     Handles a state machine step when no event happened, while on picking state
-    #     ensures the bin obstacle is suppressed for the planner, Updates the target position
-    #     to where the bin is, and send the robot to move towards it. No change of state happens
-    #     """
-    #     self.set_target_to_object(25, 25, 1, True)
-    #     self.move_to_target()
+    def _picking_no_event(self, *args):
+        """
+        Handles a state machine step when no event happened, while on picking state
+        ensures the bin obstacle is suppressed for the planner, Updates the target position
+        to where the bin is, and send the robot to move towards it. No change of state happens
+        """
+        self.set_target_to_object(0, 0, 1, True)
+        self.move_to_target()
 
     # def _holding_goal_reached(self, *args):
 
@@ -541,7 +541,7 @@ class GraspObject(Scenario):
 
         # register objects
 
-        TODO: registier stage machine 
+        # TODO: registier stage machine 
         self.pick_and_place = PickAndPlaceStateMachine(
             self._stage,
             self.franka_solid,
@@ -571,7 +571,7 @@ class GraspObject(Scenario):
                 self._paused = False
             if not self._paused:
                 self._time += 1.0 / 60.0
-                # self.pick_and_place.step(self._time, self._start, self._reset)
+                self.pick_and_place.step(self._time, self._start, self._reset)
                 if self._reset:
                     self._paused = (self._time - self._start_time) < self.timeout_max
                     self._time = 0
@@ -582,7 +582,7 @@ class GraspObject(Scenario):
                     set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
                 else:
                     state = self.franka_solid.end_effector.status.current_target
-                    # state_1 = self.pick_and_place.target_position
+                    state_1 = self.pick_and_place.target_position
                     tr = state["orig"] * 100.0
                     set_translate(target, Gf.Vec3d(tr[0], tr[1], tr[2]))
                     set_rotate(target, Gf.Matrix3d(Gf.Quatd(state_1.r.w, state_1.r.x, state_1.r.y, state_1.r.z)))
