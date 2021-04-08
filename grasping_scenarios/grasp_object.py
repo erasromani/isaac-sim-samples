@@ -257,26 +257,28 @@ class PickAndPlaceStateMachine(object):
         Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
         by [offset_up, offset_down]
         """
-        offset = _dynamic_control.Transform()
-        offset.p.x = -offset_up
+        # offset = _dynamic_control.Transform()
+        # offset.p.x = -offset_up
 
-        offset.p.z = 3
-        offset.r = (0, 0, 0, 1)
+        # offset.p.z = 0
+        # offset.r = (0, 0, 0, 1)
         body_handle = self.dc.get_rigid_body(self.current)
         obj_pose = self.dc.get_rigid_body_pose(body_handle)
-        offset_1 = _dynamic_control.Transform()
-        # tr = self.get_current_state_tr()
-        if math_utils.get_basis_vector_z(obj_pose.r).z > 0:
-            self._upright = True
-            offset_1.r = (0, -1, 0, 0)
-            offset.p.z = -3
-        else:  # If bin is upside down, pick by bottom
-            offset_1.r = (1, 0, 0, 0)
-            self._upright = False
-        target_position = math_utils.mul(math_utils.mul(obj_pose, offset_1), offset)
+        target_position = _dynamic_control.Transform()
+        target_position.p = obj_pose.p
+        # target_position = math_utils.mul(target_position, offset)
         target_position.p = math_utils.mul(target_position.p, 0.01)
 
         return target_position
+
+        self.default_position = _dynamic_control.Transform()
+        self.default_position.p = [0.3, 0.0, 0.3]
+        self.default_position.r = [0.0, 1.0, 0.0, 0.0] #TODO: Check values for stability
+        p = self.default_position.p
+        r = self.default_position.r
+        set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+        set_rotate(GoalPrim, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
+
 
     def set_target_to_object(self, offset_up=25, offset_down=25, n_waypoints=1, clear_waypoints=True):
         """
