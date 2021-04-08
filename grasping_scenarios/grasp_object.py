@@ -528,7 +528,13 @@ class GraspObject(Scenario):
     def register_assets(self, *args):
 
         # Prim path of two blocks and their handles
-        self.bin_path = "/scene/objects/object_0"
+        object_path = "/scene/objects/object_0"
+        object_children = self._stage.GetPrimAtPath(object_path).GetChildren()
+        for child in object_children:
+            child_path = child.GetPath().pathString
+            body_handle = dc.get_rigid_body(child_path)
+            if body_handle != 0:
+                self.bin_path = child_path
 
         ## register world with RMP
         self.world =  World(self._dc, self._mp)
