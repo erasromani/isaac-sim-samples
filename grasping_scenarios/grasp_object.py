@@ -257,17 +257,17 @@ class PickAndPlaceStateMachine(object):
         Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
         by [offset_up, offset_down]
         """
-        # offset = _dynamic_control.Transform()
+        offset = _dynamic_control.Transform()
         # offset.p.x = -offset_up
 
-        # offset.p.z = 0
+        offset.p.z = 10
         # offset.r = (0, 0, 0, 1)
         body_handle = self.dc.get_rigid_body(self.current)
         obj_pose = self.dc.get_rigid_body_pose(body_handle)
         target_position = _dynamic_control.Transform()
         target_position.p = obj_pose.p
         target_position.r = [0.0, 1.0, 0.0, 0.0]
-        # target_position = math_utils.mul(target_position, offset)
+        target_position = math_utils.mul(target_position, offset)
         target_position.p = math_utils.mul(target_position.p, 0.01)
         return target_position
 
