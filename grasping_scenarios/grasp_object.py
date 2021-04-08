@@ -533,7 +533,7 @@ class GraspObject(Scenario):
         object_children = self._stage.GetPrimAtPath(object_path).GetChildren()
         for child in object_children:
             child_path = child.GetPath().pathString
-            body_handle = dc.get_rigid_body(child_path)
+            body_handle = self._dc.get_rigid_body(child_path)
             if body_handle != 0:
                 self.bin_path = child_path
 
