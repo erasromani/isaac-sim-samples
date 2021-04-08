@@ -280,7 +280,6 @@ class PickAndPlaceStateMachine(object):
         set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
         set_rotate(GoalPrim, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
 
-
     def set_target_to_object(self, offset_up=25, offset_down=25, n_waypoints=1, clear_waypoints=True):
         """
         Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
@@ -361,6 +360,8 @@ class PickAndPlaceStateMachine(object):
         """
         self.move_to_zero()
         self.start = True
+        carb.log_warn('goal reached!')
+
 
     # def _attach_goal_reached(self, *args):
     #     """
