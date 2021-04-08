@@ -468,6 +468,7 @@ class GraspObject(Scenario):
 
         self.add_objects_timeout = -1
         self.franka_solid = None
+        self.add_bin()
 
     def __del__(self):
         if self.franka_solid:
