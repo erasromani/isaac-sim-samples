@@ -58,6 +58,390 @@ class SM_states(Enum):
 statedic = {0: "orig", 1: "axis_x", 2: "axis_y", 3: "axis_z"}
 
 
+class PickAndPlaceStateMachine(object):
+    """
+    Self-contained state machine class for Robot Behavior. Each machine state may react to different events,
+    and the handlers are defined as in-class functions
+    """
+
+    def __init__(self, stage, robot, ee_prim, target_body, default_position):
+        self.robot = robot
+        self.dc = robot.dc
+        self.end_effector = ee_prim
+        self.end_effector_handle = None
+        self._stage = stage
+        self.current = target_body
+
+        self.start_time = 0.0
+        self.start = False
+        self._time = 0.0
+        self.default_timeout = 0.5
+        self.default_position = copy(default_position)
+        self.target_position = default_position
+        self.reset = False
+        self.waypoints = deque()
+        self.thresh = {}
+        # Threshold to clear waypoints/goal
+        # (any waypoint that is not final will be cleared with the least precision)
+        self.precision_thresh = [
+            [0.0005, 0.0025, 0.0025, 0.0025],
+            [0.0005, 0.005, 0.005, 0.005],
+            [0.05, 0.2, 0.2, 0.2],
+            [0.08, 0.4, 0.4, 0.4],
+            [0.18, 0.6, 0.6, 0.6],
+        ]
+        self.add_bin = None
+
+        # Event management variables
+
+        # Used to verify if the goal was reached due to robot moving or it had never left previous target
+        self._is_moving = False
+        self._attached = False  # Used to flag the Attached/Detached events on a change of state from the end effector
+        self._detached = False
+        self._upright = False  # Used to indicate if the bin is being picked facing up, so the proper state is called
+        self._flipped = False
+
+        self.is_closed = False
+        self.pick_count = 0
+        # Define the state machine handling functions
+        self.sm = {}
+        # Make empty state machine for all events and states
+        for s in SM_states:
+            self.sm[s] = {}
+            for e in SM_events:
+                self.sm[s][e] = self._empty
+                self.thresh[s] = 0
+
+        # Fill in the functions to handle each event for each status
+        self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
+        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        self.thresh[SM_states.STANDBY] = 3
+
+        # self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
+        # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
+        # self.thresh[SM_states.PICKING] = 1
+
+        # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
+        # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
+
+        # self.sm[SM_states.HOLDING][SM_events.GOAL_REACHED] = self._holding_goal_reached
+        # self.thresh[SM_states.HOLDING] = 3
+        # for s in SM_states:
+        #     self.sm[s][SM_events.DETACHED] = self._all_detached
+
+        self.current_state = SM_states.STANDBY
+        self.previous_state = -1
+        self._physxIFace = _physx.acquire_physx_interface()
+
+    # Auxiliary functions
+
+    def _empty(self, *args):
+        """
+        Empty function to use on states that do not react to some specific event
+        """
+        pass
+
+    def change_state(self, new_state):
+        """
+        Function called every time a event handling changes current state
+        """
+        self.current_state = new_state
+        self.start_time = self._time
+        carb.log_warn(str(new_state))
+
+    def goalReached(self):
+        """
+        Checks if the robot has reached a certain waypoint in the trajectory
+        """
+        if self._is_moving:
+            state = self.robot.end_effector.status.current_frame
+            target = self.robot.end_effector.status.current_target
+            error = 0
+            for i in [0, 2, 3]:
+                k = statedic[i]
+                state_v = state[k]
+                target_v = target[k]
+                error = np.linalg.norm(state_v - target_v)
+                # General Threshold is the least strict
+                thresh = self.precision_thresh[-1][i]
+                # if the target is a goal point, use the defined threshold for the current state
+                if len(self.waypoints) == 0:
+                    thresh = self.precision_thresh[self.thresh[self.current_state]][i]
+
+                if error > thresh:
+                    return False
+            self._is_moving = False
+            return True
+        return False
+
+    def get_current_state_tr(self):
+        """
+        Gets current End Effector Transform, converted from Motion position and Rotation matrix
+        """
+        # Gets end effector frame
+        state = self.robot.end_effector.status.current_frame
+
+        orig = state["orig"] * 100.0
+
+        mat = Gf.Matrix3f(
+            *state["axis_x"].astype(float), *state["axis_y"].astype(float), *state["axis_z"].astype(float)
+        )
+        q = mat.ExtractRotation().GetQuaternion()
+        (q_x, q_y, q_z) = q.GetImaginary()
+        q = [q_x, q_y, q_z, q.GetReal()]
+        tr = _dynamic_control.Transform()
+        tr.p = list(orig)
+        tr.r = q
+        return tr
+
+    def ray_cast(self, x_offset=0.15, y_offset=3.0, z_offset=0.0):
+        """
+        Projects a raycast forward from the end effector, with an offset in end effector space defined by (x_offset, y_offset, z_offset)
+        if a hit is found on a distance of 100 centimiters, returns the object usd path and its distance
+        """
+        tr = self.get_current_state_tr()
+        offset = _dynamic_control.Transform()
+        offset.p = (x_offset, y_offset, z_offset)
+        raycast_tf = math_utils.mul(tr, offset)
+        origin = raycast_tf.p
+        rayDir = math_utils.get_basis_vector_x(raycast_tf.r)
+        hit = self._physxIFace.raycast_closest(origin, rayDir, 100.0)
+        if hit["hit"]:
+            usdGeom = UsdGeom.Mesh.Get(self._stage, hit["rigidBody"])
+            distance = hit["distance"]
+            return usdGeom.GetPath().pathString, distance
+        return None, 10000.0
+
+    def lerp_to_pose(self, pose, n_waypoints=1):
+        """
+        adds spherical linear interpolated waypoints from last pose in the waypoint list to the provided pose
+        if the waypoit list is empty, use current pose
+        """
+        if len(self.waypoints) == 0:
+            start = self.get_current_state_tr()
+            start.p = math_utils.mul(start.p, 0.01)
+        else:
+            start = self.waypoints[-1]
+
+        if n_waypoints > 1:
+            for i in range(n_waypoints):
+                self.waypoints.append(math_utils.slerp(start, pose, (i + 1.0) / n_waypoints))
+        else:
+            self.waypoints.append(pose)
+
+    def move_to_zero(self):
+        self._is_moving = False
+        self.robot.end_effector.go_local(
+            orig=[], axis_x=[], axis_y=[], axis_z=[], use_default_config=True, wait_for_target=False, wait_time=5.0
+        )
+
+    def move_to_target(self):
+        xform_attr = self.target_position
+        self._is_moving = True
+
+        orig = np.array([xform_attr.p.x, xform_attr.p.y, xform_attr.p.z])
+        axis_y = np.array(math_utils.get_basis_vector_y(xform_attr.r))
+        axis_z = np.array(math_utils.get_basis_vector_z(xform_attr.r))
+        self.robot.end_effector.go_local(
+            orig=orig,
+            axis_x=[],
+            axis_y=axis_y,
+            axis_z=axis_z,
+            use_default_config=True,
+            wait_for_target=False,
+            wait_time=5.0,
+        )
+
+    def get_target_to_object(self, offset_up=25, offset_down=25):
+        """
+        Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
+        by [offset_up, offset_down]
+        """
+        offset = _dynamic_control.Transform()
+        offset.p.x = -offset_up
+
+        offset.p.z = 3
+        offset.r = (0, 0, 0, 1)
+        body_handle = self.dc.get_rigid_body(self.current)
+        obj_pose = self.dc.get_rigid_body_pose(body_handle)
+        offset_1 = _dynamic_control.Transform()
+        # tr = self.get_current_state_tr()
+        if math_utils.get_basis_vector_z(obj_pose.r).z > 0:
+            self._upright = True
+            offset_1.r = (0, -1, 0, 0)
+            offset.p.z = -3
+        else:  # If bin is upside down, pick by bottom
+            offset_1.r = (1, 0, 0, 0)
+            self._upright = False
+        target_position = math_utils.mul(math_utils.mul(obj_pose, offset_1), offset)
+        target_position.p = math_utils.mul(target_position.p, 0.01)
+
+        return target_position
+
+    def set_target_to_object(self, offset_up=25, offset_down=25, n_waypoints=1, clear_waypoints=True):
+        """
+        Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
+        """
+        target_position = self.get_target_to_object(offset_up, offset_down)
+        # linear interpolate to target pose
+        if clear_waypoints:
+            self.waypoints.clear()
+        self.lerp_to_pose(target_position, n_waypoints=n_waypoints)
+        # Get first waypoint target
+        self.target_position = self.waypoints.popleft()
+
+    def step(self, timestamp, start=False, reset=False):
+        """
+            Steps the State machine, handling which event to call
+        """
+        if self.current_state != self.previous_state:
+            self.previous_state = self.current_state
+        if not self.start:
+            self.start = start
+
+        # if self.is_closed and not self.robot.end_effector.gripper.is_closed():
+        #     self._detached = True
+        #     self.is_closed = False
+
+        # Process events
+        if reset:
+            self.current_state = SM_states.STANDBY
+            self.robot.end_effector.gripper.open()
+            self.start = False
+            self._upright = False
+            self.waypoints.clear()
+            self.target_position = self.default_position
+            self.move_to_target()
+        elif self._detached:
+            self._detached = False
+            self.sm[self.current_state][SM_events.DETACHED]()
+        elif self.goalReached():
+            if len(self.waypoints) == 0:
+                self.sm[self.current_state][SM_events.GOAL_REACHED]()
+            else:
+                self.target_position = self.waypoints.popleft()
+                self.move_to_target()
+                self.start_time = self._time
+        elif self.current_state == SM_states.STANDBY and self.start:
+            self.sm[self.current_state][SM_events.START]()
+        elif self._attached:
+            self._attached = False
+            self.sm[self.current_state][SM_events.ATTACHED]()
+        elif self._time - self.start_time > self.default_timeout:
+            self.sm[self.current_state][SM_events.TIMEOUT]()
+        else:
+            self.sm[self.current_state][SM_events.NONE]()
+
+    # Event handling functions. Each state has its own event handler function depending on which event happened
+
+    def _standby_start(self, *args):
+        """
+        Handles the start event when in standby mode.
+        Proceeds to pick up the next bin on the queue, and set the arm
+        to move towards the bin from current  position.
+        switches to picking state.
+        """
+        # Tell motion planner controller to ignore current object as an obstacle
+        self.pick_count = 0
+        self.lerp_to_pose(self.default_position, 1)
+        self.lerp_to_pose(self.default_position, 90)
+        # set target above the current bin with offset of 20 cm
+        self.set_target_to_object(25, 25, 6, clear_waypoints=False)
+        # start arm movement
+        self.move_to_target()
+        # Move to next state
+        self.change_state(SM_states.PICKING)
+
+    # def _standby_goal_reached(self, *args):
+    #     """
+    #     Finished processing a bin, moves up the stack position for next bin placement
+    #     """
+    #     self.move_to_zero()
+    #     self.start = True
+
+    # def _attach_goal_reached(self, *args):
+    #     """
+    #     Handles a state machine step when the target goal is reached, and the machine is on attach state
+    #     """
+    #     self.robot.end_effector.gripper.close()
+    #     self.lerp_to_pose(self.target_position, 60)  # Wait 1 second in place for attachment
+    #     if self.robot.end_effector.gripper.is_closed():
+    #         self._attached = True
+    #         self.is_closed = True
+    #     else:  # Failed to attach so return grasp to try again
+    #         # move up 25 centimiters and return to picking state
+    #         offset = _dynamic_control.Transform()
+    #         offset.p = (-0.25, 0.0, 0.0)
+    #         self.target_position = math_utils.mul(self.target_position, offset)
+    #         self.move_to_target()
+    #         self.change_state(SM_states.PICKING)
+
+    # def _attach_attached(self, *args):
+    #     """
+    #     Handles a state machine step when the target goal is reached, and the machine is on attach state
+    #     """
+    #     self.waypoints.clear()
+    #     target_position = _dynamic_control.Transform()
+    #     target_position.p = [0.0, 0.81, 0.58]
+    #     target_position.r = [0, -1, 0, 0]
+    #     print(target_position.r)
+    #     self.lerp_to_pose(target_position, 360)
+    #     self.target_position = self.waypoints.popleft()
+    #     self.move_to_target()
+    #     self.change_state(SM_states.HOLDING)
+
+    # def _picking_goal_reached(self, *args):
+    #     """
+    #     Handles a state machine step when goal was reached event happens, while on picking state
+    #     ensures the bin obstacle is suppressed for the planner, Updates the target position
+    #     to where the bin surface is, and send the robot to move towards it. No change of state happens
+    #     """
+    #     obj, distance = self.ray_cast()
+    #     if obj is not None:
+    #         # Set target towards surface of the bin
+    #         tr = self.get_current_state_tr()
+    #         offset = _dynamic_control.Transform()
+    #         offset.p = (distance + 0.15, 0, 0)
+
+    #         target = math_utils.mul(tr, offset)
+    #         target.p = math_utils.mul(target.p, 0.01)
+    #         offset.p.x = -0.05
+
+    #         pre_target = math_utils.mul(target, offset)
+    #         self.lerp_to_pose(pre_target, n_waypoints=40)
+    #         self.lerp_to_pose(target, n_waypoints=30)
+    #         self.lerp_to_pose(target, n_waypoints=30)
+    #         self.target_position = self.waypoints.popleft()
+    #         self.move_to_target()
+    #         self.change_state(SM_states.ATTACH)
+
+    # def _picking_no_event(self, *args):
+    #     """
+    #     Handles a state machine step when no event happened, while on picking state
+    #     ensures the bin obstacle is suppressed for the planner, Updates the target position
+    #     to where the bin is, and send the robot to move towards it. No change of state happens
+    #     """
+    #     self.set_target_to_object(25, 25, 1, True)
+    #     self.move_to_target()
+
+    # def _holding_goal_reached(self, *args):
+
+    #     if self.add_bin is not None:
+    #         self.add_bin()
+    #     self.lerp_to_pose(self.target_position, 20)
+    #     self.move_to_target()
+
+    # def _all_detached(self, *args):
+    #     self.current_state = SM_states.STANDBY
+    #     self.start = False
+    #     self._upright = False
+    #     self.waypoints.clear()
+    #     self.lerp_to_pose(self.target_position, 60)
+    #     self.lerp_to_pose(self.default_position, 10)
+    #     self.lerp_to_pose(self.default_position, 60)
+    #     self.move_to_target()
+
+
 class GraspObject(Scenario):
     """ Defines an obstacle avoidance scenario
 
@@ -121,7 +505,7 @@ class GraspObject(Scenario):
         GoalPrim = self._stage.DefinePrim(target_path, "Xform")
         self.default_position = _dynamic_control.Transform()
         self.default_position.p = [0.3, 0.0, 0.3]
-        self.default_position.r = [0.0, 1.0, 0.0, 0.0]
+        self.default_position.r = [0.0, 1.0, 0.0, 0.0] #TODO: Check values for stability
         p = self.default_position.p
         r = self.default_position.r
         set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
@@ -143,6 +527,9 @@ class GraspObject(Scenario):
 
     def register_assets(self, *args):
 
+        # Prim path of two blocks and their handles
+        self.bin_path = "/scene/objects/object_0"
+
         ## register world with RMP
         self.world =  World(self._dc, self._mp)
 
@@ -154,14 +541,14 @@ class GraspObject(Scenario):
 
         # register objects
 
-        # TODO: registier stage machine 
-        # self.pick_and_place = PickAndPlaceStateMachine(
-        #     self._stage,
-        #     self.ur10_solid,
-        #     self._stage.GetPrimAtPath(self.env_path + "/ur10/ee_link"),
-        #     self.bin_path,
-        #     self.default_position,
-        # )
+        TODO: registier stage machine 
+        self.pick_and_place = PickAndPlaceStateMachine(
+            self._stage,
+            self.franka_solid,
+            self._stage.GetPrimAtPath("/scene/robot/panda_hand"),
+            self.bin_path,
+            self.default_position,
+        )
 
     def perform_tasks(self, *args):
         self._start = True
@@ -195,7 +582,7 @@ class GraspObject(Scenario):
                     set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
                 else:
                     state = self.franka_solid.end_effector.status.current_target
-                    state_1 = self.pick_and_place.target_position
+                    # state_1 = self.pick_and_place.target_position
                     tr = state["orig"] * 100.0
                     set_translate(target, Gf.Vec3d(tr[0], tr[1], tr[2]))
                     set_rotate(target, Gf.Matrix3d(Gf.Quatd(state_1.r.w, state_1.r.x, state_1.r.y, state_1.r.z)))
@@ -228,7 +615,7 @@ class GraspObject(Scenario):
                 axis_z = np.array(rotate_z)
                 self.franka_solid.end_effector.go_local(
                     orig=orig,
-                    axis_x=axis_x,
+                    axis_x=axis_x,      # TODO: consider setting this to [] for stability reasons
                     axis_y=axis_y,
                     axis_z=axis_z,
                     use_default_config=True,
