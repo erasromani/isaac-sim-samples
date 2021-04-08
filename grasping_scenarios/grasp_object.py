@@ -468,7 +468,6 @@ class GraspObject(Scenario):
 
         self.add_objects_timeout = -1
         self.franka_solid = None
-        self.add_bin()
 
     def __del__(self):
         if self.franka_solid:
@@ -515,6 +514,7 @@ class GraspObject(Scenario):
         # Setup physics simulation
         add_ground_plane(self._stage, "/groundPlane", "Z", 1000.0, Gf.Vec3f(0.0), Gf.Vec3f(1.0))
         setup_physics(self._stage)
+        self.add_bin()
 
     def add_bin(self, *args):
         self.create_new_objects(args)
