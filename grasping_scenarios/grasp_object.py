@@ -253,31 +253,32 @@ class PickAndPlaceStateMachine(object):
             wait_time=5.0,
         )
 
-    def get_target_to_object(self, offset_up=25, offset_down=25):
+    def get_target_to_object(self, offset_position=[]):
         """
         Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
         by [offset_up, offset_down]
         """
         offset = _dynamic_control.Transform()
-        # offset.p.x = -offset_up
+        if offset_position:
+            
+            offset.p.x = offset_position[0]
+            offset.p.y = offset_position[1]
+            offset.p.z = offset_position[2]
 
-        # offset.p.z = -10
-        # offset.r = (0, 0, 0, 1)
         body_handle = self.dc.get_rigid_body(self.current)
         obj_pose = self.dc.get_rigid_body_pose(body_handle)
-        target_position = _dynamic_control.Transform()
-        target_position.p = obj_pose.p
-        target_position.p.z = 10
-        target_position.r = [0.0, 1.0, 0.0, 0.0]
-        # target_position = math_utils.mul(target_position, offset)
-        target_position.p = math_utils.mul(target_position.p, 0.01)
-        return target_position
+        target_pose = _dynamic_control.Transform()
+        target_pose.p = obj_pose.p
+        target_pose.r = [0.0, 1.0, 0.0, 0.0]
+        target_pose.p = math_utils.mul(target_pose.p, offset.p)
+        target_pose.p = math_utils.mul(target_pose.p, 0.01)
+        return target_pose
 
-    def set_target_to_object(self, offset_up=25, offset_down=25, n_waypoints=1, clear_waypoints=True):
+    def set_target_to_object(self, offset_position=[], n_waypoints=1, clear_waypoints=True):
         """
         Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
         """
-        target_position = self.get_target_to_object(offset_up, offset_down)
+        target_position = self.get_target_to_object(offset_position=offset_position)
         # linear interpolate to target pose
         if clear_waypoints:
             self.waypoints.clear()
@@ -344,7 +345,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 90)
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 20 cm
-        self.set_target_to_object(0, 0, 6, clear_waypoints=False)  # TODO: update method such that one enters the z_offset
+        self.set_target_to_object(offset_position=[0, 0, 10], n_waypoints=6, clear_waypoints=False)  # TODO: update method such that one enters the z_offset
         # TODO: add another command to lower arm towards the object
         # start arm movement
         self.move_to_target()
@@ -422,7 +423,7 @@ class PickAndPlaceStateMachine(object):
         ensures the bin obstacle is suppressed for the planner, Updates the target position
         to where the bin is, and send the robot to move towards it. No change of state happens
         """
-        self.set_target_to_object(0, 0, 1, True)
+        self.set_target_to_object(offset_position=[0, 0, 10], n_waypoints=1, True)
         self.move_to_target()
 
     # def _holding_goal_reached(self, *args):
