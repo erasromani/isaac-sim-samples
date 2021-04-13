@@ -424,7 +424,7 @@ class PickAndPlaceStateMachine(object):
         ensures the bin obstacle is suppressed for the planner, Updates the target position
         to where the bin is, and send the robot to move towards it. No change of state happens
         """
-        self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=1, clear_waypoints=True)
+        self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=10, clear_waypoints=True)
         self.move_to_target()
 
     # def _holding_goal_reached(self, *args):
