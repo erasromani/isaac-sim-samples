@@ -164,6 +164,7 @@ class PickAndPlaceStateMachine(object):
                 error = np.linalg.norm(state_v - target_v)
                 # General Threshold is the least strict
                 thresh = self.precision_thresh[-1][i]
+                # NOTE: use the below as a method to identify when the goal point was reached 
                 # if the target is a goal point, use the defined threshold for the current state
                 if len(self.waypoints) == 0:
                     thresh = self.precision_thresh[self.thresh[self.current_state]][i]
@@ -272,14 +273,6 @@ class PickAndPlaceStateMachine(object):
         target_position.p = math_utils.mul(target_position.p, 0.01)
         return target_position
 
-        self.default_position = _dynamic_control.Transform()
-        self.default_position.p = [0.3, 0.0, 0.3]
-        self.default_position.r = [0.0, 1.0, 0.0, 0.0] #TODO: Check values for stability
-        p = self.default_position.p
-        r = self.default_position.r
-        set_translate(GoalPrim, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
-        set_rotate(GoalPrim, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
-
     def set_target_to_object(self, offset_up=25, offset_down=25, n_waypoints=1, clear_waypoints=True):
         """
         Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
@@ -301,12 +294,14 @@ class PickAndPlaceStateMachine(object):
         if not self.start:
             self.start = start
 
+        # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
         # if self.is_closed and not self.robot.end_effector.gripper.is_closed():
         #     self._detached = True
         #     self.is_closed = False
 
         # Process events
         if reset:
+            # reset to default pose, clear waypoints, and re-initialize event handlers
             self.current_state = SM_states.STANDBY
             self.robot.end_effector.gripper.open()
             self.start = False
@@ -347,8 +342,10 @@ class PickAndPlaceStateMachine(object):
         self.pick_count = 0
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 90)
+        self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 20 cm
-        self.set_target_to_object(0, 0, 6, clear_waypoints=False)
+        self.set_target_to_object(0, 0, 6, clear_waypoints=False)  # TODO: update method such that one enters the z_offset
+        # TODO: add another command to lower arm towards the object
         # start arm movement
         self.move_to_target()
         # Move to next state
@@ -550,9 +547,9 @@ class GraspObject(Scenario):
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
         )
 
-        # register objects
+        # TODO: register objects
 
-        # TODO: registier stage machine 
+        # register stage machine 
         self.pick_and_place = PickAndPlaceStateMachine(
             self._stage,
             self.franka_solid,
