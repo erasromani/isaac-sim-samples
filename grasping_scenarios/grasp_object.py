@@ -114,11 +114,11 @@ class PickAndPlaceStateMachine(object):
 
         # Fill in the functions to handle each event for each status
         self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
-        self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
         self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
-        self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
+        # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
         self.thresh[SM_states.PICKING] = 1
 
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
@@ -345,7 +345,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 90)
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 20 cm
-        self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=6, clear_waypoints=False)
+        self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
         # TODO: add another command to lower arm towards the object
         self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=6, clear_waypoints=False)
         # start arm movement
