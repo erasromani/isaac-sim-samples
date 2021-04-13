@@ -347,7 +347,7 @@ class PickAndPlaceStateMachine(object):
         # set target above the current bin with offset of 20 cm
         self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
         # TODO: add another command to lower arm towards the object
-        self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=6, clear_waypoints=False)
+        self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=90, clear_waypoints=False)
         # start arm movement
         self.move_to_target()
         # Move to next state
@@ -425,7 +425,8 @@ class PickAndPlaceStateMachine(object):
         to where the bin is, and send the robot to move towards it. No change of state happens
         """
         # self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=10, clear_waypoints=True)
-        self.move_to_target()
+        # self.move_to_target()
+        pass
 
     # def _holding_goal_reached(self, *args):
 
