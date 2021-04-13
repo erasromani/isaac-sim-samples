@@ -345,7 +345,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 90)
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 20 cm
-        self.set_target_to_object(offset_position=[0.0, 0.0, 10.0], n_waypoints=6, clear_waypoints=False)  # TODO: update method such that one enters the z_offset
+        self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=6, clear_waypoints=False)  # TODO: update method such that one enters the z_offset
         # TODO: add another command to lower arm towards the object
         # start arm movement
         self.move_to_target()
@@ -423,7 +423,7 @@ class PickAndPlaceStateMachine(object):
         ensures the bin obstacle is suppressed for the planner, Updates the target position
         to where the bin is, and send the robot to move towards it. No change of state happens
         """
-        self.set_target_to_object(offset_position=[0.0, 0.0, 10.0], n_waypoints=1, clear_waypoints=True)
+        self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=1, clear_waypoints=True)
         self.move_to_target()
 
     # def _holding_goal_reached(self, *args):
