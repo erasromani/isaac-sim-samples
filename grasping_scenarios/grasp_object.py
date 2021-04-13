@@ -114,7 +114,7 @@ class PickAndPlaceStateMachine(object):
 
         # Fill in the functions to handle each event for each status
         self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
-        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
         self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
@@ -168,7 +168,7 @@ class PickAndPlaceStateMachine(object):
                 # if the target is a goal point, use the defined threshold for the current state
                 if len(self.waypoints) == 0:
                     thresh = self.precision_thresh[self.thresh[self.current_state]][i]
-
+                carb.log_warn(f'ERROR: {error}, THRESHOLD: {thresh}')
                 if error > thresh:
                     return False
             self._is_moving = False
@@ -352,12 +352,12 @@ class PickAndPlaceStateMachine(object):
         self.change_state(SM_states.PICKING)
 
     # NOTE: As is, this method is never executed
-    # def _standby_goal_reached(self, *args):
-    #     """
-    #     Finished processing a bin, moves up the stack position for next bin placement
-    #     """
-    #     self.move_to_zero()
-    #     self.start = True
+    def _standby_goal_reached(self, *args):
+         """
+         Finished processing a bin, moves up the stack position for next bin placement
+         """
+         self.move_to_zero()
+         self.start = True
 
     # def _attach_goal_reached(self, *args):
     #     """
@@ -505,7 +505,7 @@ class GraspObject(Scenario):
 
         GoalPrim = self._stage.DefinePrim(target_path, "Xform")
         self.default_position = _dynamic_control.Transform()
-        self.default_position.p = [0.3, 0.0, 0.3]
+        self.default_position.p = [0.4, 0.0, 0.3]
         self.default_position.r = [0.0, 1.0, 0.0, 0.0] #TODO: Check values for stability
         p = self.default_position.p
         r = self.default_position.r
@@ -523,7 +523,7 @@ class GraspObject(Scenario):
     def create_new_objects(self, *args):
         prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
-        location = Gf.Vec3d(30, 2 * self.current_obj, 10)
+        location = Gf.Vec3d(40, 2 * self.current_obj, 10)
         create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
         self.current_obj += 1
 
