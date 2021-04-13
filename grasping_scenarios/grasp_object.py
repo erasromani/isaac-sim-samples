@@ -270,7 +270,7 @@ class PickAndPlaceStateMachine(object):
         target_pose = _dynamic_control.Transform()
         target_pose.p = obj_pose.p
         target_pose.r = [0.0, 1.0, 0.0, 0.0]
-        target_pose.p = math_utils.mul(target_pose.p, offset.p)
+        target_pose = math_utils.mul(target_pose, offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
         return target_pose
 
