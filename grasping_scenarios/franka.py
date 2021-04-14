@@ -74,7 +74,7 @@ class Gripper:
 
 
     def get_width(self):
-        return self.dc.get_dof_position(self.finger_j1) + self.dc.get_dof_position(self.finger_j1)
+        return self.dc.get_dof_position(self.finger_j1) + self.dc.get_dof_position(self.finger_j2)
 
     def is_closed(self, tol=1e-2):
         if self.get_width() < tol:

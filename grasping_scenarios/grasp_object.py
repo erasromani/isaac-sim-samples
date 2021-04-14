@@ -19,8 +19,8 @@ from omni.physx.scripts.physicsUtils import add_ground_plane
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
-# from omni.isaac.samples.scripts.utils.franka import Franka, default_config
-from .franka import Franka, default_config
+from omni.isaac.samples.scripts.utils.franka import Franka, default_config
+# from .franka import Franka, default_config
 
 from .scenario import set_translate, set_rotate, Scenario, setup_physics
 from copy import copy
