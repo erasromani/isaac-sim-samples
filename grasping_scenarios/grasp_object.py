@@ -299,7 +299,7 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        carb.log_warn(self.robot.end_effector.gripper.width)
+        carb.log_warn(str(self.robot.end_effector.gripper.width))
         if self.is_closed and self.robot.end_effector.gripper.width != 0:
             self._attched = True
             self.is_closed = False
