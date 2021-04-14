@@ -123,7 +123,7 @@ class PickAndPlaceStateMachine(object):
         # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
         self.thresh[SM_states.PICKING] = 1
 
-        self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
+        # self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
 
@@ -171,7 +171,7 @@ class PickAndPlaceStateMachine(object):
                 # if the target is a goal point, use the defined threshold for the current state
                 if len(self.waypoints) == 0:
                     thresh = self.precision_thresh[self.thresh[self.current_state]][i]
-                carb.log_warn(f'ERROR: {error}, THRESHOLD: {thresh}')
+                # carb.log_warn(f'ERROR: {error}, THRESHOLD: {thresh}')
                 if error > thresh:
                     return False
             self._is_moving = False
@@ -299,9 +299,10 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        # if self.is_closed and not self.robot.end_effector.gripper.is_closed():
-        #     self._detached = True
-        #     self.is_closed = False
+        carb.log_warn(self.robot.end_effector.gripper.width)
+        if self.is_closed and self.robot.end_effector.gripper.width != 0:
+            self._attched = True
+            self.is_closed = False
 
         # Process events
         if reset:
@@ -344,7 +345,6 @@ class PickAndPlaceStateMachine(object):
         """
         # Tell motion planner controller to ignore current object as an obstacle
         self.pick_count = 0
-        self.is_moving = True
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 90)
         self.robot.end_effector.gripper.open()
@@ -422,7 +422,7 @@ class PickAndPlaceStateMachine(object):
         #     self.move_to_target()
         #     self.change_state(SM_states.ATTACH)
         self.robot.end_effector.gripper.close()
-        self.is_moving = False
+        self.is_closed = True
         # Move to next state
         self.move_to_target()
         self.change_state(SM_states.GRASPING)
