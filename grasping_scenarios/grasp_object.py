@@ -119,17 +119,18 @@ class PickAndPlaceStateMachine(object):
         self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
-        # self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
+        self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
         # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
-        # self.thresh[SM_states.PICKING] = 1
+        self.thresh[SM_states.PICKING] = 1
 
+        self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
 
         # self.sm[SM_states.HOLDING][SM_events.GOAL_REACHED] = self._holding_goal_reached
         # self.thresh[SM_states.HOLDING] = 3
-        # for s in SM_states:
-        #     self.sm[s][SM_events.DETACHED] = self._all_detached
+        for s in SM_states:
+            self.sm[s][SM_events.DETACHED] = self._all_detached
 
         self.current_state = SM_states.STANDBY
         self.previous_state = -1
@@ -423,6 +424,7 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.close()
         self.is_moving = False
         # Move to next state
+        self.move_to_target()
         self.change_state(SM_states.GRASPING)
 
     def _picking_no_event(self, *args):
@@ -442,15 +444,14 @@ class PickAndPlaceStateMachine(object):
     #     self.lerp_to_pose(self.target_position, 20)
     #     self.move_to_target()
 
-    # def _all_detached(self, *args):
-    #     self.current_state = SM_states.STANDBY
-    #     self.start = False
-    #     self._upright = False
-    #     self.waypoints.clear()
-    #     self.lerp_to_pose(self.target_position, 60)
-    #     self.lerp_to_pose(self.default_position, 10)
-    #     self.lerp_to_pose(self.default_position, 60)
-    #     self.move_to_target()
+    def _all_detached(self, *args):
+         self.current_state = SM_states.STANDBY
+         self.start = False
+         self.waypoints.clear()
+         self.lerp_to_pose(self.target_position, 60)
+         self.lerp_to_pose(self.default_position, 10)
+         self.lerp_to_pose(self.default_position, 60)
+         self.move_to_target()
 
 
 class GraspObject(Scenario):
