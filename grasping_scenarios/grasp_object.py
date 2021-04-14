@@ -347,7 +347,7 @@ class PickAndPlaceStateMachine(object):
         # set target above the current bin with offset of 20 cm
         self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
         # TODO: add another command to lower arm towards the object
-        self..lerp_to_pose(self.get_current_state_tr(), 90)
+        self.lerp_to_pose(self.get_current_state_tr(), 90)
         self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=90, clear_waypoints=False)
         # start arm movement
         self.move_to_target()
