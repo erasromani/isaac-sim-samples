@@ -53,6 +53,8 @@ class SM_states(Enum):
     PICKING = 1
     ATTACH = 2
     HOLDING = 3
+    GRASPING = 4
+    LIFTING = 5
 
 
 statedic = {0: "orig", 1: "axis_x", 2: "axis_y", 3: "axis_z"}
@@ -114,12 +116,12 @@ class PickAndPlaceStateMachine(object):
 
         # Fill in the functions to handle each event for each status
         self.sm[SM_states.STANDBY][SM_events.START] = self._standby_start
-        # self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
+        self.sm[SM_states.STANDBY][SM_events.GOAL_REACHED] = self._standby_goal_reached
         self.thresh[SM_states.STANDBY] = 3
 
-        self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
+        # self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
         # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
-        self.thresh[SM_states.PICKING] = 1
+        # self.thresh[SM_states.PICKING] = 1
 
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
@@ -341,6 +343,7 @@ class PickAndPlaceStateMachine(object):
         """
         # Tell motion planner controller to ignore current object as an obstacle
         self.pick_count = 0
+        self.is_moving = True
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 90)
         self.robot.end_effector.gripper.open()
@@ -417,7 +420,10 @@ class PickAndPlaceStateMachine(object):
         #     self.target_position = self.waypoints.popleft()
         #     self.move_to_target()
         #     self.change_state(SM_states.ATTACH)
-        carb.log_warn('picking_goal_reached')
+        self.robot.end_effector.gripper.close()
+        self.is_moving = False
+        # Move to next state
+        self.change_state(SM_states.GRASPING)
 
     def _picking_no_event(self, *args):
         """
