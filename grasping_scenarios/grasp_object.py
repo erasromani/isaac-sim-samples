@@ -19,7 +19,8 @@ from omni.physx.scripts.physicsUtils import add_ground_plane
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
-from omni.isaac.samples.scripts.utils.franka import Franka, default_config
+# from omni.isaac.samples.scripts.utils.franka import Franka, default_config
+from .franka import Franka, default_config
 
 from .scenario import set_translate, set_rotate, Scenario, setup_physics
 from copy import copy
@@ -299,11 +300,12 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        carb.log_warn(str(self.robot.end_effector.gripper.width))
+        carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}')
+        # TODO: change gripper.width != 0 to the actual value of the articulation dof
         if self.is_closed and self.robot.end_effector.gripper.width != 0 and self.current_state == SM_states.GRASPING:
             self._attched = True
             self.is_closed = False
-
+        # TODO: change gripper.width == 0 to the actual value of the articulation dof
         if self.is_closed and self.robot.end_effector.gripper.width == 0 and self.current_state == SM_states.GRASPING:
             self._detached = True
             self.is_closed = True
