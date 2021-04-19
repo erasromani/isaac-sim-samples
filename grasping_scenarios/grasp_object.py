@@ -302,7 +302,7 @@ class PickAndPlaceStateMachine(object):
         # finger_velocity = self.robot.end_effector.gripper.get_velocity()
         leftfinger_handle = self.robot.end_effector.gripper.dc.get_rigid_body(self.robot.end_effector.gripper.dc.get_articulation_path(self.robot.end_effector.gripper.ar) + '/panda_leftfinger')
         rightfinger_handle = self.robot.end_effector.gripper.dc.get_rigid_body(self.robot.end_effector.gripper.dc.get_articulation_path(self.robot.end_effector.gripper.ar) + '/panda_rightfinger')
-        leftfinger_velocity = np.linalg.norm(np.array(self.robot.end_effector.gripper.dc.get_rigid_body_local_linear_velocity(left_finger_handle)))
+        leftfinger_velocity = np.linalg.norm(np.array(self.robot.end_effector.gripper.dc.get_rigid_body_local_linear_velocity(leftfinger_handle)))
         # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f})')
         carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, LEFTFINGER_VELOCITY: ({leftfinger_velocity:.4f}')
         # if self.is_closed and self.current_state == SM_states.GRASPING:
