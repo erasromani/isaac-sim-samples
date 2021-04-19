@@ -74,9 +74,20 @@ class Gripper:
     def get_width(self):
         return self.dc.get_dof_position(self.finger_j1) + self.dc.get_dof_position(self.finger_j2)
 
-    def get_velocity(self):
-        return (self.dc.get_dof_velocity(self.finger_j1), self.dc.get_dof_velocity(self.finger_j2))
+    def get_velocity(self, from_articulation=True):
+        if from_articulation:
+            
+            return (self.dc.get_dof_velocity(self.finger_j1), self.dc.get_dof_velocity(self.finger_j2))
 
+        else:
+        
+            leftfinger_handle = self.dc.get_rigid_body(self.dc.get_articulation_path(self.ar) + '/panda_leftfinger')
+            rightfinger_handle = self.dc.get_rigid_body(self.dc.get_articulation_path(self.ar) + '/panda_rightfinger')
+            leftfinger_velocity = np.linalg.norm(np.array(self.dc.get_rigid_body_local_linear_velocity(leftfinger_handle)))
+            rightfinger_velocity = np.linalg.norm(np.array(self.dc.get_rigid_body_local_linear_velocity(rightfinger_handle)))
+            return (leftfinger_velocity, rightfinger_velocity)
+
+ 
     def is_closed(self, tol=1e-2):
         if self.get_width() < tol:
             return True

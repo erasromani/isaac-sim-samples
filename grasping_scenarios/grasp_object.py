@@ -299,19 +299,15 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        finger_velocity = self.robot.end_effector.gripper.get_velocity()
-        # leftfinger_handle = self.robot.end_effector.gripper.dc.get_rigid_body(self.robot.end_effector.gripper.dc.get_articulation_path(self.robot.end_effector.gripper.ar) + '/panda_leftfinger')
-        # rightfinger_handle = self.robot.end_effector.gripper.dc.get_rigid_body(self.robot.end_effector.gripper.dc.get_articulation_path(self.robot.end_effector.gripper.ar) + '/panda_rightfinger')
-        # leftfinger_velocity = np.linalg.norm(np.array(self.robot.end_effector.gripper.dc.get_rigid_body_local_linear_velocity(leftfinger_handle)))
-        # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f})')
-        # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, LEFTFINGER_VELOCITY: {leftfinger_velocity:.4f}')
+        finger_velocity = self.robot.end_effector.gripper.get_velocity(get_articulation=False)
+        carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f})')
         if self.is_closed and self.current_state == SM_states.GRASPING:
             # object grasped
-            # if not self.robot.end_effector.gripper.is_closed(1e-2) and finger_velocity[0]!=0 and finger_velocity[0]!=0 and self.current_state == SM_states.GRASPING:
+            # if not self.robot.end_effector.gripper.is_closed(1e-2) and finger_velocity[0]!=0 and finger_velocity[0]!=0:
             #     self._attached = True
             #     self.is_closed = False
             # object not grasped
-            if self.robot.end_effector.gripper.is_closed(1e-6):
+            if self.robot.end_effector.gripper.is_closed(1e-2):
                 self._detached = True
                 self.is_closed = True
 
