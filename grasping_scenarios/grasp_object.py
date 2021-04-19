@@ -299,7 +299,7 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=False)
+        finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
         carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f})')
         if self.is_closed and self.current_state == SM_states.GRASPING:
             # object grasped
