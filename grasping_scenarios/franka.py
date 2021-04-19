@@ -14,7 +14,7 @@ import omni.kit.settings
 from omni.isaac.motion_planning import _motion_planning
 import carb.tokens
 
-from . import math_utils
+from omni.isaac.samples.scripts.utils import math_utils
 
 # default joint configuration
 default_config = (0.00, -1.3, 0.00, -2.87, 0.00, 2.00, 0.75)
