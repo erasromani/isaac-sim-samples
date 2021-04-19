@@ -19,8 +19,8 @@ from omni.physx.scripts.physicsUtils import add_ground_plane
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
-from omni.isaac.samples.scripts.utils.franka import Franka, default_config
-# from .franka import Franka, default_config
+# from omni.isaac.samples.scripts.utils.franka import Franka, default_config
+from .franka import Franka, default_config
 
 from .scenario import set_translate, set_rotate, Scenario, setup_physics
 from copy import copy
@@ -101,8 +101,6 @@ class PickAndPlaceStateMachine(object):
         self._is_moving = False
         self._attached = False  # Used to flag the Attached/Detached events on a change of state from the end effector
         self._detached = False
-        self._upright = False  # Used to indicate if the bin is being picked facing up, so the proper state is called
-        self._flipped = False
 
         self.is_closed = False
         self.pick_count = 0
@@ -317,7 +315,6 @@ class PickAndPlaceStateMachine(object):
             self.current_state = SM_states.STANDBY
             self.robot.end_effector.gripper.open()
             self.start = False
-            self._upright = False
             self.waypoints.clear()
             self.target_position = self.default_position
             self.move_to_target()

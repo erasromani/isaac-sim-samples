@@ -53,7 +53,6 @@ class Gripper:
         self.finger_j1 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint1")
         self.finger_j2 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint2")
         self.width = 0
-        # self.is_closed = True
 
     def open(self, wait=False):
         if self.width < 0.045:
@@ -71,7 +70,6 @@ class Gripper:
     def update(self):
         self.dc.set_dof_position_target(self.finger_j1, self.width * 0.5 * 100)
         self.dc.set_dof_position_target(self.finger_j2, self.width * 0.5 * 100)
-
 
     def get_width(self):
         return self.dc.get_dof_position(self.finger_j1) + self.dc.get_dof_position(self.finger_j2)
