@@ -122,7 +122,7 @@ class PickAndPlaceStateMachine(object):
         # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
         self.thresh[SM_states.PICKING] = 1
 
-        # self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
+        self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
 
@@ -255,6 +255,7 @@ class PickAndPlaceStateMachine(object):
             wait_time=5.0,
         )
 
+    # TODO: Add grasp angle
     def get_target_to_object(self, offset_position=[]):
         """
         Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
@@ -298,14 +299,13 @@ class PickAndPlaceStateMachine(object):
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure (self.is_closed and self.robot.end_effector.gripper.width != 0)
-        # width = self.robot.end_effector.gripper.dc.get_dof_position(self.robot.end_effector.gripper.finger_j1) + self.robot.end_effector.gripper.dc.get_dof_position(self.robot.end_effector.gripper.finger_j2)
         carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}')
-        # TODO: change gripper.width != 0 to the actual value of the articulation dof
-        if self.is_closed and self.robot.end_effector.gripper.width != 0 and self.current_state == SM_states.GRASPING:
-            self._attched = True
+        # object grasped
+        if self.is_closed and not self.robot.end_effector.gripper.is_closed(0.5) and self.current_state == SM_states.GRASPING:
+            self._attached = True
             self.is_closed = False
-        # TODO: change gripper.width == 0 to the actual value of the articulation dof
-        if self.is_closed and self.robot.end_effector.gripper.width == 0 and self.current_state == SM_states.GRASPING:
+        # object not grasped
+        if self.is_closed and self.robot.end_effector.gripper.is_closed(0.5) and self.current_state == SM_states.GRASPING:
             self._detached = True
             self.is_closed = True
 
@@ -439,6 +439,25 @@ class PickAndPlaceStateMachine(object):
         """
         # self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=10, clear_waypoints=True)
         # self.move_to_target()
+        pass
+
+    def _grasping_attached(self, *args):
+        self.waypoints.clear()
+        offset = _dynamic_control.Transform()
+        offset.p.z = -10
+        target_pose = math_utils.mul(self.get_current_state_tr(), offset)
+        target_pose.p = math_utils.mul(target_pose.p, 0.01)
+        self.lerp_to_pose(target_pose)
+        # Move to next state
+        self.move_to_target()
+        self.change_state(SM_states.LIFTING)
+
+    def _grasping_goal_reached(self, *args):
+        # self.robot.end_effector.gripper.open()
+        # self.is_closed = False
+        # # Move to next state
+        # self.move_to_target()
+        # self.change_state(SM_states.STANDBY)
         pass
 
     # def _holding_goal_reached(self, *args):
