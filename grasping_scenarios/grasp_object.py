@@ -557,17 +557,17 @@ class GraspObject(Scenario):
     # TODO: update method
     def step(self, step):
         if self._editor.is_playing():
-            # if self._pending_stop:
-            #     self.stop_tasks()
-            #     return
+            if self._pending_stop:
+                self.stop_tasks()
+                return
             # Updates current references and locations for the robot.
             self.world.update()
             self.franka_solid.update()
 
             target = self._stage.GetPrimAtPath("/scene/target")
             xform_attr = target.GetAttribute("xformOp:transform")
-            # if self._reset:
-            #     self._paused = False
+            if self._reset:
+                self._paused = False
             if not self._paused:
                 self._time += 1.0 / 60.0
                 self.pick_and_place.step(self._time, self._start, self._reset)
@@ -626,11 +626,10 @@ class GraspObject(Scenario):
         if self.pick_and_place is not None:
             if self._editor.is_playing():
                 self._reset = True
-                self._paused = True
-            #     self._pending_disable = True
-            #     self._pending_stop = False
-            # else:
-            #     self._pending_stop = True
+                self._pending_disable = True
+                self._pending_stop = False
+            else:
+                self._pending_stop = True
 
     def pause_tasks(self, *args):
         self._paused = not self._paused
