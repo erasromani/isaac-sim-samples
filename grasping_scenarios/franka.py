@@ -95,7 +95,7 @@ class Gripper:
             return (leftfinger_velocity, rightfinger_velocity)
 
     def is_moving(self, tol=1e-2):
-        if len(self.width_history) < self.width_history.maxlen and np.array(self.width_history).std() > tol:
+        if len(self.width_history) < self.width_history.maxlen or np.array(self.width_history).std() > tol:
             return True
         else:
             return False
