@@ -536,7 +536,7 @@ class GraspObject(Scenario):
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
         )
 
-        # TODO: register objects
+        # TODO: register objects (self.objects = [])
 
         # register stage machine 
         self.pick_and_place = PickAndPlaceStateMachine(
@@ -620,24 +620,17 @@ class GraspObject(Scenario):
                     wait_time=5.0,
                 )
 
-    # TODO: update method
     def stop_tasks(self, *args):
-        pass
+        if self.pick_and_place is not None:
+            if self._editor.is_playing():
+                self._reset = True
+                self._pending_disable = True
+                self._pending_stop = False
+            else:
+                self._pending_stop = True
 
-    # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
-        # if self._paused:
-        #     selection = omni.usd.get_context().get_selection()
-        #     selection.set_selected_prim_paths(["/scene/target"], False)
-        #     target = self._stage.GetPrimAtPath("/scene/target")
-        #     xform_attr = target.GetAttribute("xformOp:translate")
-        #     translate_attr = np.array(xform_attr.Get().GetRow3(3))
-        #     if np.linalg.norm(translate_attr) < 0.01:
-        #         p = self.default_position.p
-        #         r = self.default_position.r
-        #         set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
-        #         set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
         return self._paused
 
     def open_gripper(self):
@@ -649,4 +642,5 @@ class GraspObject(Scenario):
             self._gripper_open = True
 
     def set_target_angle(self, angle):
-        self.pick_and_place.target_angle = angle
+        if self.pick_and_place is not None:
+            self.pick_and_place.target_angle = angle
