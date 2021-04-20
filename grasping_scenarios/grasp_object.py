@@ -305,7 +305,7 @@ class PickAndPlaceStateMachine(object):
         """
             Steps the State machine, handling which event to call
         """
-        self._time = timestamp
+        # self._time = timestamp
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
         if not self.start:
@@ -345,7 +345,7 @@ class PickAndPlaceStateMachine(object):
             else:
                 self.target_position = self.waypoints.popleft()
                 self.move_to_target()
-                # self.start_time = self._time
+                self.start_time = self._time
         elif self.current_state == SM_states.STANDBY and self.start:
             self.sm[self.current_state][SM_events.START]()
         elif self._attached:
