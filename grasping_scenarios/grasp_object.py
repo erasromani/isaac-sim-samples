@@ -466,13 +466,9 @@ class PickAndPlaceStateMachine(object):
         pass
 
     def _lifting_goal_reached(self, *args):
-        # self.robot.end_effector.gripper.open()
-        # self.is_closed = False
-        # # Move to next state
-        # self.move_to_target()
-        # self.change_state(SM_states.STANDBY)
+        self.is_closed = False
         self.robot.end_effector.gripper.open()
-        self.move_to_target()
+        self._all_detached()
         carb.log_warn('GRASP SUCCESSFUL')
 
     # def _holding_goal_reached(self, *args):
@@ -490,6 +486,7 @@ class PickAndPlaceStateMachine(object):
          self.lerp_to_pose(self.default_position, 10)
          self.lerp_to_pose(self.default_position, 60)
          self.move_to_target()
+         carb.log_warn('GRASP UNSUCCESSFUL')
 
 
 class GraspObject(Scenario):
