@@ -431,6 +431,7 @@ class PickAndPlaceStateMachine(object):
         self.is_closed = True
         # Move to next state
         self.move_to_target()
+        self.robot.end_effector.gripper.width_history.clear()
         self.change_state(SM_states.GRASPING)
 
     def _picking_no_event(self, *args):
@@ -452,6 +453,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(target_pose)
         # Move to next state
         self.move_to_target()
+        self.robot.end_effector.gripper.width_history.clear()
         self.change_state(SM_states.LIFTING)
 
     def _grasping_goal_reached(self, *args):
