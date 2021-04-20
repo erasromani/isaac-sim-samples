@@ -273,13 +273,13 @@ class PickAndPlaceStateMachine(object):
         target_pose = _dynamic_control.Transform()
         target_pose.p = obj_pose.p
         # target_pose.r = [0.0, 1.0, 0.0, 0.0]
-        target_pose.r = self.get_target_orientation(45)
+        target_pose.r = self.get_target_orientation()
         target_pose = math_utils.mul(target_pose, offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
         return target_pose
 
-    def get_target_orientation(self, angle):
-        angle *= np.pi / 180
+    def get_target_orientation(self):
+        angle = self.target_angle * np.pi / 180
         mat = Gf.Matrix3f(
             -np.cos(angle), -np.sin(angle), 0, -np.sin(angle), np.cos(angle), 0, 0, 0, -1
         )
@@ -644,3 +644,6 @@ class GraspObject(Scenario):
         else:
             self.franka_solid.end_effector.gripper.open()
             self._gripper_open = True
+
+    def set_target_angle(self, angle):
+        self.pick_and_place.target_angle = angle

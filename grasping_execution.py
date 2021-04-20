@@ -55,6 +55,12 @@ class Extension(omni.ext.IExt):
         self._perform_task_btn.set_clicked_fn(self._on_perform_task)
         self._perform_task_btn.enabled = False
 
+        self._angle_floatfield = self._window.layout.add_child(omni.kit.ui.DragDouble(text="Grasp Angle"))
+        self._angle_floatfield.set_on_changed_fn(self._on_angle_changed)
+        self._angle_floatfield.min = -180
+        self._angle_floatfield.max = 180
+        self._angle_floatfield.enabled = False
+
         self._stop_task_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Task"))
         self._stop_task_btn.set_clicked_fn(self._on_stop_tasks)
         self._stop_task_btn.enabled = False
@@ -161,6 +167,9 @@ class Extension(omni.ext.IExt):
                 self._on_add_bin()
         return True
 
+    def _on_angle_changed(self, *args):
+        self._scenario.set_target_angle(self._angle_floatfield.value)
+
     def _on_editor_step(self, step):
         if self._editor.is_playing():
             if self._first_step:
@@ -176,6 +185,7 @@ class Extension(omni.ext.IExt):
             self._stop_task_btn.enabled = False
             self._pause_task_btn.enabled = False
             self._open_gripper_btn.enabled = False
+            self._angle_floatfield.enabled = False
             self._add_object_btn.enabled = False
             self._editor.stop()
             self._on_stop_tasks()
@@ -183,6 +193,7 @@ class Extension(omni.ext.IExt):
 
     def _on_perform_task(self, *args):
         self._perform_task_btn.enabled = False
+        self._angle_floatfield.enabled = True
         self._pause_task_btn.enabled = True
         self._stop_task_btn.enabled = True
         self._open_gripper_btn.enabled = False
