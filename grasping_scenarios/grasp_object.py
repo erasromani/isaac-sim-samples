@@ -126,6 +126,7 @@ class PickAndPlaceStateMachine(object):
         # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
         # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
 
+        self.sm[SM_states.LIFTING][SM_events.GOAL_REACHED] = self._lifting_goal_reached
         # self.sm[SM_states.HOLDING][SM_events.GOAL_REACHED] = self._holding_goal_reached
         # self.thresh[SM_states.HOLDING] = 3
         for s in SM_states:
