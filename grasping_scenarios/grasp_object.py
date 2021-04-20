@@ -130,7 +130,7 @@ class PickAndPlaceStateMachine(object):
 
         for s in SM_states:
             self.sm[s][SM_events.DETACHED] = self._all_detached
-            self.sm[self.current_state][SM_events.TIMEOUT] = self._all_detached
+            self.sm[s][SM_events.TIMEOUT] = self._all_detached
 
         self.current_state = SM_states.STANDBY
         self.previous_state = -1
