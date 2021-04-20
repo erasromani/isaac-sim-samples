@@ -301,7 +301,7 @@ class PickAndPlaceStateMachine(object):
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure
         finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
-        carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
+        # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
         # if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
         if self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING:
             # object grasped
@@ -452,7 +452,7 @@ class PickAndPlaceStateMachine(object):
         offset.p.z = -10
         target_pose = math_utils.mul(self.get_current_state_tr(), offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
-        self.lerp_to_pose(target_pose)
+        self.lerp_to_pose(target_pose, n_waypoints=60)
         # Move to next state
         self.move_to_target()
         self.robot.end_effector.gripper.width_history.clear()
