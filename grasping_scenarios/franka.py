@@ -95,7 +95,7 @@ class Gripper:
             return (leftfinger_velocity, rightfinger_velocity)
 
     def is_moving(self, tol=1e-2):
-        if self.robot.end_effector.gripper.width_history).std() > tol:
+        if np.arrya(self.robot.end_effector.gripper.width_history).std() > tol:
             return True
         else:
             return False
