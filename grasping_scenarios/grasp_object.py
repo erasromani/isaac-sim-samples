@@ -303,7 +303,7 @@ class PickAndPlaceStateMachine(object):
         carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
         if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
             # object grasped
-            if not self.robot.end_effector.gripper.is_closed(1e-2) and not self.robot.end_effector.gripper.is_moving(1e-3):
+            if not self.robot.end_effector.gripper.is_closed(1e-2) and not self.robot.end_effector.gripper.is_moving(1e-4):
                 self._attached = True
                 # self.is_closed = False
             # object not grasped
