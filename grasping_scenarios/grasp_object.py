@@ -627,17 +627,17 @@ class GraspObject(Scenario):
     # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
-        if self._paused:
-            selection = omni.usd.get_context().get_selection()
-            selection.set_selected_prim_paths(["/scene/target"], False)
-            target = self._stage.GetPrimAtPath("/scene/target")
-            xform_attr = target.GetAttribute("xformOp:translate")
-            translate_attr = np.array(xform_attr.Get().GetRow3(3))
-            if np.linalg.norm(translate_attr) < 0.01:
-                p = self.default_position.p
-                r = self.default_position.r
-                set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
-                set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
+        # if self._paused:
+        #     selection = omni.usd.get_context().get_selection()
+        #     selection.set_selected_prim_paths(["/scene/target"], False)
+        #     target = self._stage.GetPrimAtPath("/scene/target")
+        #     xform_attr = target.GetAttribute("xformOp:translate")
+        #     translate_attr = np.array(xform_attr.Get().GetRow3(3))
+        #     if np.linalg.norm(translate_attr) < 0.01:
+        #         p = self.default_position.p
+        #         r = self.default_position.r
+        #         set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+        #         set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
         return self._paused
 
     def open_gripper(self):
