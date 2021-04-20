@@ -11,10 +11,12 @@ import os
 import numpy as np
 from pxr import Usd, UsdGeom, Gf
 import omni.kit.settings
+from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.motion_planning import _motion_planning
 import carb.tokens
 
 from omni.isaac.samples.scripts.utils import math_utils
+from collections import deque
 
 # default joint configuration
 default_config = (0.00, -1.3, 0.00, -2.87, 0.00, 2.00, 0.75)
@@ -53,6 +55,7 @@ class Gripper:
         self.finger_j1 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint1")
         self.finger_j2 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint2")
         self.width = 0
+        self.width_history = deque(maxlen=1000)
 
     def open(self, wait=False):
         if self.width < 0.045:
@@ -70,10 +73,14 @@ class Gripper:
     def update(self):
         self.dc.set_dof_position_target(self.finger_j1, self.width * 0.5 * 100)
         self.dc.set_dof_position_target(self.finger_j2, self.width * 0.5 * 100)
+        self.width_history.append(self.get_width())
 
     def get_width(self):
-        return self.dc.get_dof_position(self.finger_j1) + self.dc.get_dof_position(self.finger_j2)
+        return sum(self.get_position())
 
+    def get_position(self):
+        return self.dc.get_dof_position(self.finger_j1), self.dc.get_dof_position(self.finger_j2)
+    
     def get_velocity(self, from_articulation=True):
         if from_articulation:
             
@@ -87,7 +94,10 @@ class Gripper:
             rightfinger_velocity = np.linalg.norm(np.array(self.dc.get_rigid_body_local_linear_velocity(rightfinger_handle)))
             return (leftfinger_velocity, rightfinger_velocity)
 
- 
+    def get_state(self):
+        dof_states = self.dc.get_articulation_dof_states(self.ar, _dynamic_control.STATE_ALL)
+        return dof_states[-2], dof_states[-1]
+
     def is_closed(self, tol=1e-2):
         if self.get_width() < tol:
             return True
