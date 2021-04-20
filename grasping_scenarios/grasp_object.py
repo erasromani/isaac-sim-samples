@@ -555,9 +555,9 @@ class GraspObject(Scenario):
     # TODO: update method
     def step(self, step):
         if self._editor.is_playing():
-            if self._pending_stop:
-                self.stop_tasks()
-                return
+            # if self._pending_stop:
+            #     self.stop_tasks()
+            #     return
             # Updates current references and locations for the robot.
             self.world.update()
             self.franka_solid.update()
@@ -624,10 +624,10 @@ class GraspObject(Scenario):
         if self.pick_and_place is not None:
             if self._editor.is_playing():
                 self._reset = True
-                self._pending_disable = True
-                self._pending_stop = False
-            else:
-                self._pending_stop = True
+            #     self._pending_disable = True
+            #     self._pending_stop = False
+            # else:
+            #     self._pending_stop = True
 
         carb.log_warn(f'PENDING_STOP: {self._pending_stop}, RESET: {self._reset}')
 
