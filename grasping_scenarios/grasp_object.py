@@ -354,7 +354,7 @@ class PickAndPlaceStateMachine(object):
         # Tell motion planner controller to ignore current object as an obstacle
         self.pick_count = 0
         self.lerp_to_pose(self.default_position, 1)
-        self.lerp_to_pose(self.default_position, 90)
+        self.lerp_to_pose(self.default_position, 60)
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 20 cm
         self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
@@ -453,7 +453,7 @@ class PickAndPlaceStateMachine(object):
         target_pose = math_utils.mul(self.get_current_state_tr(), offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
         self.lerp_to_pose(target_pose, n_waypoints=60)
-        self.lerp_to_pose(target_pose, n_waypoints=60)
+        self.lerp_to_pose(target_pose, n_waypoints=90)
         # Move to next state
         self.move_to_target()
         self.robot.end_effector.gripper.width_history.clear()
