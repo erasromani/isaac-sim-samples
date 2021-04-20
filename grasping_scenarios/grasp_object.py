@@ -81,7 +81,7 @@ class PickAndPlaceStateMachine(object):
         self.default_timeout = 0.5
         self.default_position = copy(default_position)
         self.target_position = default_position
-        self.target_angle = 90 # grasp angle in degrees
+        self.target_angle = 0 # grasp angle in degrees
         self.reset = False
         self.waypoints = deque()
         self.thresh = {}

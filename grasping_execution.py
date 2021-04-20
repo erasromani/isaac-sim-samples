@@ -55,10 +55,11 @@ class Extension(omni.ext.IExt):
         self._perform_task_btn.set_clicked_fn(self._on_perform_task)
         self._perform_task_btn.enabled = False
 
-        self._angle_floatfield = self._window.layout.add_child(omni.kit.ui.DragDouble(text="Grasp Angle"))
+        self._angle_floatfield = self._window.layout.add_child(omni.kit.ui.DragDouble(text="   Grasp Angle"))
         self._angle_floatfield.set_on_changed_fn(self._on_angle_changed)
         self._angle_floatfield.min = -180
         self._angle_floatfield.max = 180
+        self._angle_floatfield.width = 100
         self._angle_floatfield.enabled = False
 
         self._stop_task_btn = self._window.layout.add_child(omni.kit.ui.Button("Reset Task"))
