@@ -55,7 +55,7 @@ class Gripper:
         self.finger_j1 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint1")
         self.finger_j2 = self.dc.find_articulation_dof(self.ar, "panda_finger_joint2")
         self.width = 0
-        self.width_history = deque(maxlen=100)
+        self.width_history = deque(maxlen=50)
 
     def open(self, wait=False):
         if self.width < 0.045:
