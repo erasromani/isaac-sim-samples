@@ -305,6 +305,7 @@ class PickAndPlaceStateMachine(object):
         """
             Steps the State machine, handling which event to call
         """
+        self._time = timestamp
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
         if not self.start:
@@ -315,7 +316,7 @@ class PickAndPlaceStateMachine(object):
         # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
         carb.log_warn(f'{self._time - self.start_time:.2f}')
         # if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
-        if self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING:
+        if self.current_state in [SM_states.GRASPING, SM_states.LIFTING]:
             # object grasped
             if not self.robot.end_effector.gripper.is_closed(1e-1) and not self.robot.end_effector.gripper.is_moving(1e-2):
                 self._attached = True
@@ -344,7 +345,7 @@ class PickAndPlaceStateMachine(object):
             else:
                 self.target_position = self.waypoints.popleft()
                 self.move_to_target()
-                self.start_time = self._time
+                # self.start_time = self._time
         elif self.current_state == SM_states.STANDBY and self.start:
             self.sm[self.current_state][SM_events.START]()
         elif self._attached:
@@ -371,8 +372,8 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 10 cm
         self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
-        # TODO: add another command to lower arm towards the object
-        self.lerp_to_pose(self.waypoints[-1], 90)
+        # pause before lowering to target object
+        self.lerp_to_pose(self.waypoints[-1], 180)
         self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=90, clear_waypoints=False)
         # start arm movement
         self.move_to_target()
@@ -590,7 +591,7 @@ class GraspObject(Scenario):
                         self.create_new_objects()
                 # if (
                 #     self.pick_and_place.current_state == self.current_state
-                #     and self.current_state in [SM_states.PICKING, SM_states.ATTACH]
+                #     and self.current_state in [SM_states.PICKING, SM_states.GRASPING, SM_states.LIFTING]
                 #     and (self._time - self._start_time) > self.timeout_max
                 # ):
                 #     self.stop_tasks()
@@ -626,17 +627,17 @@ class GraspObject(Scenario):
     # TODO: update method
     def pause_tasks(self, *args):
         self._paused = not self._paused
-        # if self._paused:
-        #     selection = omni.usd.get_context().get_selection()
-        #     selection.set_selected_prim_paths(["/scene/target"], False)
-        #     target = self._stage.GetPrimAtPath("/scene/target")
-        #     xform_attr = target.GetAttribute("xformOp:translate")
-        #     translate_attr = np.array(xform_attr.Get().GetRow3(3))
-        #     if np.linalg.norm(translate_attr) < 0.01:
-        #         p = self.default_position.p
-        #         r = self.default_position.r
-        #         set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
-        #         set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
+        if self._paused:
+            selection = omni.usd.get_context().get_selection()
+            selection.set_selected_prim_paths(["/scene/target"], False)
+            target = self._stage.GetPrimAtPath("/scene/target")
+            xform_attr = target.GetAttribute("xformOp:translate")
+            translate_attr = np.array(xform_attr.Get().GetRow3(3))
+            if np.linalg.norm(translate_attr) < 0.01:
+                p = self.default_position.p
+                r = self.default_position.r
+                set_translate(target, Gf.Vec3d(p.x * 100, p.y * 100, p.z * 100))
+                set_rotate(target, Gf.Matrix3d(Gf.Quatd(r.w, r.x, r.y, r.z)))
         return self._paused
 
     def open_gripper(self):
