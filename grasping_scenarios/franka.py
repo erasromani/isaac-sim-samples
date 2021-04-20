@@ -94,6 +94,12 @@ class Gripper:
             rightfinger_velocity = np.linalg.norm(np.array(self.dc.get_rigid_body_local_linear_velocity(rightfinger_handle)))
             return (leftfinger_velocity, rightfinger_velocity)
 
+    def is_moving(self, tol=1e-2):
+        if self.robot.end_effector.gripper.width_history).std() > tol:
+            return True
+        else:
+            return False
+
     def get_state(self):
         dof_states = self.dc.get_articulation_dof_states(self.ar, _dynamic_control.STATE_ALL)
         return dof_states[-2], dof_states[-1]
