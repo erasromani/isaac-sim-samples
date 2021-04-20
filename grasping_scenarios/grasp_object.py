@@ -566,8 +566,8 @@ class GraspObject(Scenario):
 
             target = self._stage.GetPrimAtPath("/scene/target")
             xform_attr = target.GetAttribute("xformOp:transform")
-            if self._reset:
-                self._paused = False
+            # if self._reset:
+            #     self._paused = False
             if not self._paused:
                 self._time += 1.0 / 60.0
                 self.pick_and_place.step(self._time, self._start, self._reset)
@@ -626,6 +626,7 @@ class GraspObject(Scenario):
         if self.pick_and_place is not None:
             if self._editor.is_playing():
                 self._reset = True
+                self._paused = True
             #     self._pending_disable = True
             #     self._pending_stop = False
             # else:
