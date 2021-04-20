@@ -81,6 +81,7 @@ class PickAndPlaceStateMachine(object):
         self.default_timeout = 0.5
         self.default_position = copy(default_position)
         self.target_position = default_position
+        self.target_angle = 90 # grasp angle in degrees
         self.reset = False
         self.waypoints = deque()
         self.thresh = {}
@@ -119,16 +120,14 @@ class PickAndPlaceStateMachine(object):
         self.thresh[SM_states.STANDBY] = 3
 
         self.sm[SM_states.PICKING][SM_events.GOAL_REACHED] = self._picking_goal_reached
-        # self.sm[SM_states.PICKING][SM_events.NONE] = self._picking_no_event
         self.thresh[SM_states.PICKING] = 1
 
         self.sm[SM_states.GRASPING][SM_events.ATTACHED] = self._grasping_attached
-        # self.sm[SM_states.ATTACH][SM_events.GOAL_REACHED] = self._attach_goal_reached
-        # self.sm[SM_states.ATTACH][SM_events.ATTACHED] = self._attach_attached
+        # self.thresh[SM_states.GRASPING] = 3
 
         self.sm[SM_states.LIFTING][SM_events.GOAL_REACHED] = self._lifting_goal_reached
-        # self.sm[SM_states.HOLDING][SM_events.GOAL_REACHED] = self._holding_goal_reached
-        # self.thresh[SM_states.HOLDING] = 3
+        # self.thresh[SM_states.LIFTING] = 3
+
         for s in SM_states:
             self.sm[s][SM_events.DETACHED] = self._all_detached
 
@@ -273,10 +272,21 @@ class PickAndPlaceStateMachine(object):
         obj_pose = self.dc.get_rigid_body_pose(body_handle)
         target_pose = _dynamic_control.Transform()
         target_pose.p = obj_pose.p
-        target_pose.r = [0.0, 1.0, 0.0, 0.0]
+        # target_pose.r = [0.0, 1.0, 0.0, 0.0]
+        target_pose.r = self.get_target_orientation(45)
         target_pose = math_utils.mul(target_pose, offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
         return target_pose
+
+    def get_target_orientation(self, angle):
+        angle *= np.pi / 180
+        mat = Gf.Matrix3f(
+            -np.cos(angle), -np.sin(angle), 0, -np.sin(angle), np.cos(angle), 0, 0, 0, -1
+        )
+        q = mat.ExtractRotation().GetQuaternion()
+        (q_x, q_y, q_z) = q.GetImaginary()
+        q = [q_x, q_y, q_z, q.GetReal()]
+        return q
 
     def set_target_to_object(self, offset_position=[], n_waypoints=1, clear_waypoints=True):
         """
@@ -319,6 +329,7 @@ class PickAndPlaceStateMachine(object):
             self.current_state = SM_states.STANDBY
             self.robot.end_effector.gripper.open()
             self.start = False
+            self.pick_count = 0
             self.waypoints.clear()
             self.target_position = self.default_position
             self.move_to_target()
@@ -356,7 +367,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 60)
         self.robot.end_effector.gripper.open()
-        # set target above the current bin with offset of 20 cm
+        # set target above the current bin with offset of 10 cm
         self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
         # TODO: add another command to lower arm towards the object
         self.lerp_to_pose(self.waypoints[-1], 90)
@@ -374,77 +385,18 @@ class PickAndPlaceStateMachine(object):
          self.move_to_zero()
          self.start = True
 
-    # def _attach_goal_reached(self, *args):
-    #     """
-    #     Handles a state machine step when the target goal is reached, and the machine is on attach state
-    #     """
-    #     self.robot.end_effector.gripper.close()
-    #     self.lerp_to_pose(self.target_position, 60)  # Wait 1 second in place for attachment
-    #     if self.robot.end_effector.gripper.is_closed():
-    #         self._attached = True
-    #         self.is_closed = True
-    #     else:  # Failed to attach so return grasp to try again
-    #         # move up 25 centimiters and return to picking state
-    #         offset = _dynamic_control.Transform()
-    #         offset.p = (-0.25, 0.0, 0.0)
-    #         self.target_position = math_utils.mul(self.target_position, offset)
-    #         self.move_to_target()
-    #         self.change_state(SM_states.PICKING)
-
-    # def _attach_attached(self, *args):
-    #     """
-    #     Handles a state machine step when the target goal is reached, and the machine is on attach state
-    #     """
-    #     self.waypoints.clear()
-    #     target_position = _dynamic_control.Transform()
-    #     target_position.p = [0.0, 0.81, 0.58]
-    #     target_position.r = [0, -1, 0, 0]
-    #     print(target_position.r)
-    #     self.lerp_to_pose(target_position, 360)
-    #     self.target_position = self.waypoints.popleft()
-    #     self.move_to_target()
-    #     self.change_state(SM_states.HOLDING)
-
     def _picking_goal_reached(self, *args):
         """
         Handles a state machine step when goal was reached event happens, while on picking state
         ensures the bin obstacle is suppressed for the planner, Updates the target position
         to where the bin surface is, and send the robot to move towards it. No change of state happens
         """
-        # obj, distance = self.ray_cast()
-        # if obj is not None:
-        #     # Set target towards surface of the bin
-        #     tr = self.get_current_state_tr()
-        #     offset = _dynamic_control.Transform()
-        #     offset.p = (distance + 0.15, 0, 0)
-
-        #     target = math_utils.mul(tr, offset)
-        #     target.p = math_utils.mul(target.p, 0.01)
-        #     offset.p.x = -0.05
-
-        #     pre_target = math_utils.mul(target, offset)
-        #     self.lerp_to_pose(pre_target, n_waypoints=40)
-        #     self.lerp_to_pose(target, n_waypoints=30)
-        #     self.lerp_to_pose(target, n_waypoints=30)
-        #     self.target_position = self.waypoints.popleft()
-        #     self.move_to_target()
-        #     self.change_state(SM_states.ATTACH)
         self.robot.end_effector.gripper.close()
         self.is_closed = True
         # Move to next state
         self.move_to_target()
         self.robot.end_effector.gripper.width_history.clear()
         self.change_state(SM_states.GRASPING)
-
-    def _picking_no_event(self, *args):
-        """
-        Handles a state machine step when no event happened, while on picking state
-        ensures the bin obstacle is suppressed for the planner, Updates the target position
-        to where the bin is, and send the robot to move towards it. No change of state happens
-        """
-        # self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=10, clear_waypoints=True)
-        # self.move_to_target()
-        pass
 
     def _grasping_attached(self, *args):
         self.waypoints.clear()
@@ -459,26 +411,12 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.width_history.clear()
         self.change_state(SM_states.LIFTING)
 
-    def _grasping_goal_reached(self, *args):
-        # self.robot.end_effector.gripper.open()
-        # self.is_closed = False
-        # # Move to next state
-        # self.move_to_target()
-        # self.change_state(SM_states.STANDBY)
-        pass
-
     def _lifting_goal_reached(self, *args):
         self.is_closed = False
         self.robot.end_effector.gripper.open()
         self._all_detached()
+        self.pick_count += 1
         carb.log_warn('GRASP SUCCESSFUL')
-
-    # def _holding_goal_reached(self, *args):
-
-    #     if self.add_bin is not None:
-    #         self.add_bin()
-    #     self.lerp_to_pose(self.target_position, 20)
-    #     self.move_to_target()
 
     def _all_detached(self, *args):
          self.current_state = SM_states.STANDBY
