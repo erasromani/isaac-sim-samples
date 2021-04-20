@@ -453,6 +453,7 @@ class PickAndPlaceStateMachine(object):
         target_pose = math_utils.mul(self.get_current_state_tr(), offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
         self.lerp_to_pose(target_pose, n_waypoints=60)
+        self.lerp_to_pose(self.default_position, n_waypoints=60)
         # Move to next state
         self.move_to_target()
         self.robot.end_effector.gripper.width_history.clear()
