@@ -130,7 +130,7 @@ class PickAndPlaceStateMachine(object):
 
         for s in SM_states:
             self.sm[s][SM_events.DETACHED] = self._all_detached
-            self.sm[s][SM_events.TIMEOUT] = self._all_detached
+            self.sm[s][SM_events.TIMEOUT] = self._all_timeout
 
         self.current_state = SM_states.STANDBY
         self.previous_state = -1
@@ -426,6 +426,15 @@ class PickAndPlaceStateMachine(object):
         self._all_detached()
         self.pick_count += 1
         carb.log_warn('GRASP SUCCESSFUL')
+
+    def _all_timeout(self, *args):
+        self.change_state(SM_states.STANDBY, print_state=False)
+        self.start = False
+        self.waypoints.clear()
+        self.lerp_to_pose(self.default_position, 10)
+        self.lerp_to_pose(self.default_position, 60)
+        self.move_to_target()
+        carb.log_warn('GRASP UNSUCCESSFUL')
 
     def _all_detached(self, *args):
         self.change_state(SM_states.STANDBY, print_state=False)
