@@ -78,7 +78,7 @@ class PickAndPlaceStateMachine(object):
         self.start_time = 0.0
         self.start = False
         self._time = 0.0
-        self.default_timeout = 100
+        self.default_timeout = 10
         self.default_position = copy(default_position)
         self.target_position = default_position
         self.target_angle = 0 # grasp angle in degrees
