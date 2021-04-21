@@ -306,15 +306,17 @@ class PickAndPlaceStateMachine(object):
             Steps the State machine, handling which event to call
         """
         # self._time = timestamp
+        self._time += 1.0 / 60.0
+
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
         if not self.start:
             self.start = start
 
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure
-        finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
+        # finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
         # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
-        # carb.log_warn(f'{self._time - self.start_time:.2f}')
+        carb.log_warn(f'TIME: {self._time:.4f}, START_TIME: {self.start_time:.4f}')
         # if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
         if self.current_state in [SM_states.GRASPING, SM_states.LIFTING]:
             # object grasped
@@ -633,6 +635,7 @@ class GraspObject(Scenario):
         self._paused = not self._paused
         return self._paused
 
+    # TODO: use gripper.width == 0 as a proxy for _gripper_open == False
     def open_gripper(self):
         if self._gripper_open:
             self.franka_solid.end_effector.gripper.close()
