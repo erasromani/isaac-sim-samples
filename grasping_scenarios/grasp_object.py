@@ -432,7 +432,7 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.open()
         self.start = False
         self.waypoints.clear()
-        # self.target_position = self.default_position
+        self.target_position = self.default_position
         # self.lerp_to_pose(self.target_position, 60)
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 10)
