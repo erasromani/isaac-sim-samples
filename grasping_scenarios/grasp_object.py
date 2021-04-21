@@ -566,12 +566,12 @@ class GraspObject(Scenario):
             xform_attr = target.GetAttribute("xformOp:transform")
             if self._reset:
                 self._paused = False
-                self._start = True
             if not self._paused:
                 self._time += 1.0 / 60.0
                 self.pick_and_place.step(self._time, self._start, self._reset)
                 if self._reset:
-                    self._paused = (self._time - self._start_time) < self.timeout_max
+                    # self._paused = (self._time - self._start_time) < self.timeout_max
+                    self._pause = True
                     self._time = 0
                     self._start_time = 0
                     p = self.default_position.p
