@@ -144,13 +144,13 @@ class PickAndPlaceStateMachine(object):
         """
         pass
 
-    def change_state(self, new_state):
+    def change_state(self, new_state, print_state=True):
         """
         Function called every time a event handling changes current state
         """
         self.current_state = new_state
         self.start_time = self._time
-        carb.log_warn(str(new_state))
+        if print_state: carb.log_warn(str(new_state))
 
     def goalReached(self):
         """
@@ -306,8 +306,6 @@ class PickAndPlaceStateMachine(object):
             Steps the State machine, handling which event to call
         """
         # self._time = timestamp
-        # self._time += 1.0 / 60.0
-
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
         if not self.start:
@@ -316,7 +314,7 @@ class PickAndPlaceStateMachine(object):
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure
         # finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
         # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
-        carb.log_warn(f'TIME: {self._time:.4f}, START_TIME: {self.start_time:.4f}')
+        carb.log_warn(f'TIME: {self._time:.4f}, START_TIME: {self.start_time:.4f}, DELTA_TIME: {self._time - self.start_time:.4f}')
         # if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
         if self.current_state in [SM_states.GRASPING, SM_states.LIFTING]:
             # object grasped
@@ -332,8 +330,11 @@ class PickAndPlaceStateMachine(object):
         if reset:
             # reset to default pose, clear waypoints, and re-initialize event handlers
             self.current_state = SM_states.STANDBY
+            self.previous_state = -1
             self.robot.end_effector.gripper.open()
             self.start = False
+            self._time = 0
+            self.start_time = self._time
             self.pick_count = 0
             self.waypoints.clear()
             self._detached = False
@@ -349,7 +350,7 @@ class PickAndPlaceStateMachine(object):
             else:
                 self.target_position = self.waypoints.popleft()
                 self.move_to_target()
-                self.start_time = self._time
+                # self.start_time = self._time
         elif self.current_state == SM_states.STANDBY and self.start:
             self.sm[self.current_state][SM_events.START]()
         elif self._attached:
@@ -359,6 +360,9 @@ class PickAndPlaceStateMachine(object):
             self.sm[self.current_state][SM_events.TIMEOUT]()
         else:
             self.sm[self.current_state][SM_events.NONE]()
+
+        self._time += 1.0 / 60.0
+
 
     # Event handling functions. Each state has its own event handler function depending on which event happened
 
@@ -426,14 +430,14 @@ class PickAndPlaceStateMachine(object):
         carb.log_warn('GRASP SUCCESSFUL')
 
     def _all_detached(self, *args):
-         self.current_state = SM_states.STANDBY
-         self.start = False
-         self.waypoints.clear()
-         self.lerp_to_pose(self.target_position, 60)
-         self.lerp_to_pose(self.default_position, 10)
-         self.lerp_to_pose(self.default_position, 60)
-         self.move_to_target()
-         carb.log_warn('GRASP UNSUCCESSFUL')
+        self.change_state(SM_states.STANDBY, print_state=False):
+        self.start = False
+        self.waypoints.clear()
+        self.lerp_to_pose(self.target_position, 60)
+        self.lerp_to_pose(self.default_position, 10)
+        self.lerp_to_pose(self.default_position, 60)
+        self.move_to_target()
+        carb.log_warn('GRASP UNSUCCESSFUL')
 
 
 class GraspObject(Scenario):
