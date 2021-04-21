@@ -450,7 +450,6 @@ class GraspObject(Scenario):
         self.current_state = SM_states.STANDBY
         self.timeout_max = 8.0
         self.pick_and_place = None
-        self._pending_disable = False
         self._pending_stop = False
         self._gripper_open = False
 
@@ -554,7 +553,6 @@ class GraspObject(Scenario):
         self._paused = False
         return False
 
-    # TODO: update method
     def step(self, step):
         if self._editor.is_playing():
             if self._pending_stop:
@@ -568,6 +566,7 @@ class GraspObject(Scenario):
             xform_attr = target.GetAttribute("xformOp:transform")
             if self._reset:
                 self._paused = False
+                self._start = True
             if not self._paused:
                 self._time += 1.0 / 60.0
                 self.pick_and_place.step(self._time, self._start, self._reset)
@@ -601,8 +600,7 @@ class GraspObject(Scenario):
                 #     self._start_time = self._time
                 #     print(self._time)
                 #     self.current_state = self.pick_and_place.current_state
-
-            if self._paused:
+            else:
                 translate_attr = xform_attr.Get().GetRow3(3)
                 rotate_x = xform_attr.Get().GetRow3(0)
                 rotate_y = xform_attr.Get().GetRow3(1)
@@ -626,7 +624,6 @@ class GraspObject(Scenario):
         if self.pick_and_place is not None:
             if self._editor.is_playing():
                 self._reset = True
-                self._pending_disable = True
                 self._pending_stop = False
             else:
                 self._pending_stop = True
