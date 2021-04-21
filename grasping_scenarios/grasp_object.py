@@ -57,6 +57,9 @@ class SM_states(Enum):
     GRASPING = 4
     LIFTING = 5
 
+class GRASP_eval(Enum):
+    FAILURE = 0
+    SUCCESS = 1
 
 statedic = {0: "orig", 1: "axis_x", 2: "axis_y", 3: "axis_z"}
 
@@ -417,7 +420,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 10)
         self.lerp_to_pose(self.default_position, 60)
         self.move_to_target()
-        carb.log_warn('GRASP UNSUCCESSFUL')
+        carb.log_warn(str(GRASP_eval.FAILURE))
 
     def _all_detached(self, *args):
         self.change_state(SM_states.STANDBY, print_state=False)
@@ -427,7 +430,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 10)
         self.lerp_to_pose(self.default_position, 60)
         self.move_to_target()
-        carb.log_warn('GRASP UNSUCCESSFUL')
+        carb.log_warn(str(GRASP_eval.SUCCESS))
 
 
 class GraspObject(Scenario):
