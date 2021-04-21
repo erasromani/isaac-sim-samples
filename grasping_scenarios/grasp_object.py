@@ -554,7 +554,7 @@ class GraspObject(Scenario):
         return False
 
     def step(self, step):
-        carb.log_warn(f"PAUSED: {self._paused}, RESET: {self._reset}, PENDING_STOP: {self._pending_stop}")
+        carb.log_warn(f"PAUSED: {self._paused}, RESET: {self._reset}, PENDING_STOP: {self._pending_stop}, START: {self._start}")
         if self._editor.is_playing():
             if self._pending_stop:
                 self.stop_tasks()
