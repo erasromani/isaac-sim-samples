@@ -407,7 +407,7 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.open()
         self._all_detached()
         self.pick_count += 1
-        carb.log_warn('GRASP SUCCESSFUL')
+        carb.log_warn(str(GRASP_eval.SUCCESS))
 
     def _all_timeout(self, *args):
         self.change_state(SM_states.STANDBY, print_state=False)
@@ -430,7 +430,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 10)
         self.lerp_to_pose(self.default_position, 60)
         self.move_to_target()
-        carb.log_warn(str(GRASP_eval.SUCCESS))
+        carb.log_warn(str(GRASP_eval.FAILURE))
 
 
 class GraspObject(Scenario):
