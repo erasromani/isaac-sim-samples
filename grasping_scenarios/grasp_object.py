@@ -572,7 +572,7 @@ class GraspObject(Scenario):
                 self.pick_and_place.step(self._time, self._start, self._reset)
                 if self._reset:
                     # self._paused = (self._time - self._start_time) < self.timeout_max
-                    self._pause = True
+                    self._paused = True
                     self._time = 0
                     self._start_time = 0
                     p = self.default_position.p
