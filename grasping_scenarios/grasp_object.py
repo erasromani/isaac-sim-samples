@@ -198,24 +198,6 @@ class PickAndPlaceStateMachine(object):
         tr.r = q
         return tr
 
-    def ray_cast(self, x_offset=0.15, y_offset=3.0, z_offset=0.0):
-        """
-        Projects a raycast forward from the end effector, with an offset in end effector space defined by (x_offset, y_offset, z_offset)
-        if a hit is found on a distance of 100 centimiters, returns the object usd path and its distance
-        """
-        tr = self.get_current_state_tr()
-        offset = _dynamic_control.Transform()
-        offset.p = (x_offset, y_offset, z_offset)
-        raycast_tf = math_utils.mul(tr, offset)
-        origin = raycast_tf.p
-        rayDir = math_utils.get_basis_vector_x(raycast_tf.r)
-        hit = self._physxIFace.raycast_closest(origin, rayDir, 100.0)
-        if hit["hit"]:
-            usdGeom = UsdGeom.Mesh.Get(self._stage, hit["rigidBody"])
-            distance = hit["distance"]
-            return usdGeom.GetPath().pathString, distance
-        return None, 10000.0
-
     def lerp_to_pose(self, pose, n_waypoints=1):
         """
         adds spherical linear interpolated waypoints from last pose in the waypoint list to the provided pose
@@ -256,7 +238,6 @@ class PickAndPlaceStateMachine(object):
             wait_time=5.0,
         )
 
-    # TODO: Add grasp angle
     def get_target_to_object(self, offset_position=[]):
         """
         Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
@@ -273,7 +254,6 @@ class PickAndPlaceStateMachine(object):
         obj_pose = self.dc.get_rigid_body_pose(body_handle)
         target_pose = _dynamic_control.Transform()
         target_pose.p = obj_pose.p
-        # target_pose.r = [0.0, 1.0, 0.0, 0.0]
         target_pose.r = self.get_target_orientation()
         target_pose = math_utils.mul(target_pose, offset)
         target_pose.p = math_utils.mul(target_pose.p, 0.01)
@@ -305,7 +285,6 @@ class PickAndPlaceStateMachine(object):
         """
             Steps the State machine, handling which event to call
         """
-        # self._time = timestamp
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
         if not self.start:
@@ -314,7 +293,7 @@ class PickAndPlaceStateMachine(object):
         # NOTE: This may be a good way to evaluate whether the graps was a success or failure
         # finger_velocity = self.robot.end_effector.gripper.get_velocity(from_articulation=True)
         # carb.log_warn(f'WIDTH: {self.robot.end_effector.gripper.width:.4f}, ACTUAL WIDTH: {self.robot.end_effector.gripper.get_width():.4f}, FINGER_VELOCITY: ({finger_velocity[0]:.4f}, {finger_velocity[1]:.4f}), HISTORY_STD: {np.array(self.robot.end_effector.gripper.width_history).std():.2e}')
-        carb.log_warn(f'TIME: {self._time:.4f}, START_TIME: {self.start_time:.4f}, DELTA_TIME: {self._time - self.start_time:.4f}')
+        # carb.log_warn(f'TIME: {self._time:.4f}, START_TIME: {self.start_time:.4f}, DELTA_TIME: {self._time - self.start_time:.4f}')
         # if self.is_closed and (self.current_state == SM_states.GRASPING or self.current_state == SM_states.LIFTING):
         if self.current_state in [SM_states.GRASPING, SM_states.LIFTING]:
             # object grasped
