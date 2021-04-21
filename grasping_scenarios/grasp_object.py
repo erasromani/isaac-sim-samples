@@ -78,7 +78,7 @@ class PickAndPlaceStateMachine(object):
         self.start_time = 0.0
         self.start = False
         self._time = 0.0
-        self.default_timeout = 0.5
+        self.default_timeout = 100
         self.default_position = copy(default_position)
         self.target_position = default_position
         self.target_angle = 0 # grasp angle in degrees
@@ -360,9 +360,7 @@ class PickAndPlaceStateMachine(object):
             self.sm[self.current_state][SM_events.TIMEOUT]()
         else:
             self.sm[self.current_state][SM_events.NONE]()
-
         self._time += 1.0 / 60.0
-
 
     # Event handling functions. Each state has its own event handler function depending on which event happened
 
@@ -430,7 +428,7 @@ class PickAndPlaceStateMachine(object):
         carb.log_warn('GRASP SUCCESSFUL')
 
     def _all_detached(self, *args):
-        self.change_state(SM_states.STANDBY, print_state=False):
+        self.change_state(SM_states.STANDBY, print_state=False)
         self.start = False
         self.waypoints.clear()
         self.lerp_to_pose(self.target_position, 60)
