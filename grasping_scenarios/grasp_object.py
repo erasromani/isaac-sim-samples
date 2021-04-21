@@ -306,7 +306,7 @@ class PickAndPlaceStateMachine(object):
             Steps the State machine, handling which event to call
         """
         # self._time = timestamp
-        self._time += 1.0 / 60.0
+        # self._time += 1.0 / 60.0
 
         if self.current_state != self.previous_state:
             self.previous_state = self.current_state
