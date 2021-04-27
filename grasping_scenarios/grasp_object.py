@@ -86,6 +86,7 @@ class PickAndPlaceStateMachine(object):
         self.target_position = default_position
         self.target_angle = 0 # grasp angle in degrees
         self.reset = False
+        self.evaluation = None
         self.waypoints = deque()
         self.thresh = {}
         # Threshold to clear waypoints/goal
@@ -314,6 +315,7 @@ class PickAndPlaceStateMachine(object):
             self.current_state = SM_states.STANDBY
             self.previous_state = -1
             self.robot.end_effector.gripper.open()
+            self.evaluation = None
             self.start = False
             self._time = 0
             self.start_time = self._time
@@ -355,6 +357,7 @@ class PickAndPlaceStateMachine(object):
         """
         # Tell motion planner controller to ignore current object as an obstacle
         self.pick_count = 0
+        self.evaluation = None
         self.lerp_to_pose(self.default_position, 1)
         self.lerp_to_pose(self.default_position, 60)
         self.robot.end_effector.gripper.open()
@@ -407,6 +410,7 @@ class PickAndPlaceStateMachine(object):
         self.robot.end_effector.gripper.open()
         self._all_detached()
         self.pick_count += 1
+        self.evaluation = GRASP_eval.SUCCESS
         carb.log_warn(str(GRASP_eval.SUCCESS))
 
     def _all_timeout(self, *args):
@@ -420,6 +424,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 10)
         self.lerp_to_pose(self.default_position, 60)
         self.move_to_target()
+        self.evaluation = GRASP_eval.FAILURE
         carb.log_warn(str(GRASP_eval.FAILURE))
 
     def _all_detached(self, *args):
@@ -430,6 +435,7 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 10)
         self.lerp_to_pose(self.default_position, 60)
         self.move_to_target()
+        self.evaluation = GRASP_eval.FAILURE
         carb.log_warn(str(GRASP_eval.FAILURE))
 
 

@@ -271,7 +271,8 @@ class Franka:
 
         exec_folder = os.path.abspath(
             carb.tokens.get_tokens_interface().resolve(
-                "${app}/../exts/omni.isaac.motion_planning/resources/lula/lula_franka"
+                # "${app}/../exts/omni.isaac.motion_planning/resources/lula/lula_franka"
+                "/home/robot-lab/isaac-sim/_build/linux-x86_64/release/exts/omni.isaac.motion_planning/resources/lula/lula_franka"
             )
         )
 
