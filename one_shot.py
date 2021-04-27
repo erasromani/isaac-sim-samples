@@ -40,8 +40,6 @@ from omni.isaac.synthetic_utils import SyntheticDataHelper
 
 CAMERA_DISTANCE = 300
 
-
-
 kit = OmniKitHelper(
     {"renderer": "RayTracedLighting", "experience": f'{os.environ["EXP_PATH"]}/isaac-sim-python.json'}
 )
@@ -114,3 +112,11 @@ carb.log_warn(str(_scenario.pick_and_place.evaluation))
 
 # Stop physics simulation
 kit.stop()
+
+
+# method create_franka
+# method load_single_object and let it fall
+# method execute_grasp(position, orientation) return success / failure
+# reset robot to default position
+# method clear object
+# method clear robot

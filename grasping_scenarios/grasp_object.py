@@ -21,6 +21,7 @@ from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
 # from omni.isaac.samples.scripts.utils.franka import Franka, default_config
 from .franka import Franka, default_config
+from scipy.spatial.transform import Rotation
 
 from .scenario import set_translate, set_rotate, Scenario, setup_physics
 from copy import copy
@@ -37,6 +38,7 @@ def create_prim_from_usd(stage, prim_env_path, prim_usd_path, location):
     envPrim = stage.DefinePrim(prim_env_path, "Xform")  # create an empty Xform at the given path
     envPrim.GetReferences().AddReference(prim_usd_path)  # attach the USD to the given path
     set_translate(envPrim, location)  # set pose
+    return envPrim
 
 class SM_events(Enum):
     START = 0
@@ -438,6 +440,54 @@ class PickAndPlaceStateMachine(object):
         self.evaluation = GRASP_eval.FAILURE
         carb.log_warn(str(GRASP_eval.FAILURE))
 
+class RigidBody:
+
+    def __init__(self, prim, dc):
+        self.prim = prim
+        self._dc = dc
+        self.name = prim.GetPrimPath().name
+        self.handle = self.get_rigid_body_handle()
+
+
+    def __repr__(self):
+        return self.name
+
+    def get_rigid_body_handle(self):
+        object_children = self.prim.GetChildren()
+        for child in object_children:
+            child_path = child.GetPath().pathString
+            body_handle = self._dc.get_rigid_body(child_path)
+            if body_handle != 0:
+                bin_path = child_path
+
+        import pdb; pdb.set_trace()
+
+        object_handle = self._dc.get_rigid_body(bin_path)
+        if object_handle != 0: return object_handle
+
+    def get_linear_velocity(self):
+        return np.array(self._dc.get_rigid_body_linear_velocity(self.handle))
+
+    def get_angular_velocity(self):
+        return np.array(self._dc.get_rigid_body_angular_velocity(self.handle))
+
+    def get_speed(self):
+        velocity = self.get_linear_velocity()
+        speed = np.linalg.norm(velocity)
+        return speed
+
+    def get_pose(self):
+        return self._dc.get_rigid_body_pose(self.handle)
+
+    def get_position(self):
+        pose = self.get_pose()
+        position = np.array(pose.p)
+        return position
+    
+    def get_orientation(self):
+        pose = self.get_pose()
+        orientation = np.array(pose.r)
+        return orientation
 
 class GraspObject(Scenario):
     """ Defines an obstacle avoidance scenario
@@ -470,15 +520,12 @@ class GraspObject(Scenario):
             self.franka_solid.end_effector.gripper = None
         super().__del__()
 
-    def on_startup(self):
-        super().on_startup()
-
     def create_franka(self, *args):
         super().create_franka()
         if self.asset_path is None:
             return
 
-        self.objects = [
+        self.objects_usd = [
             self.asset_path + "/Props/Flip_Stack/large_corner_bracket_physics.usd",
             self.asset_path + "/Props/Flip_Stack/screw_95_physics.usd",
             self.asset_path + "/Props/Flip_Stack/screw_99_physics.usd",
@@ -509,18 +556,25 @@ class GraspObject(Scenario):
 
         # Setup physics simulation
         add_ground_plane(self._stage, "/groundPlane", "Z", 1000.0, Gf.Vec3f(0.0), Gf.Vec3f(1.0))
-        setup_physics(self._stage)
+        setup_physics(self._stage)        
         self.add_bin()
 
     def add_bin(self, *args):
         self.create_new_objects(args)
 
+    def add_and_register_object(self, *args):    
+        prim = self.create_new_objects(args)
+        if not hasattr(self, 'objects'):
+            self.objects = []
+        self.objects.append(RigidBody(prim, self._dc))
+
     def create_new_objects(self, *args):
-        prim_usd_path = self.objects[random.randint(0, len(self.objects) - 1)]
+        prim_usd_path = self.objects_usd[random.randint(0, len(self.objects_usd) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
         location = Gf.Vec3d(40, 2 * self.current_obj, 10)
-        create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
+        prim = create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
         self.current_obj += 1
+        return prim
 
     def register_assets(self, *args):
 
@@ -542,7 +596,13 @@ class GraspObject(Scenario):
             self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
         )
 
-        # TODO: register objects (self.objects = [])
+        # register objects
+        self.objects = []
+        objects_path = '/scene/objects'
+        objects_prim = self._stage.GetPrimAtPath(objects_path)
+        if objects_prim.IsValid():
+            for object_prim in objects_prim.GetChildren():
+                self.objects.append(RigidBody(object_prim, self._dc))
 
         # register stage machine 
         self.pick_and_place = PickAndPlaceStateMachine(
@@ -595,16 +655,6 @@ class GraspObject(Scenario):
                     self.add_objects_timeout -= 1
                     if self.add_objects_timeout == 0:
                         self.create_new_objects()
-                # if (
-                #     self.pick_and_place.current_state == self.current_state
-                #     and self.current_state in [SM_states.PICKING, SM_states.GRASPING, SM_states.LIFTING]
-                #     and (self._time - self._start_time) > self.timeout_max
-                # ):
-                #     self.stop_tasks()
-                # elif self.pick_and_place.current_state != self.current_state:
-                #     self._start_time = self._time
-                #     print(self._time)
-                #     self.current_state = self.pick_and_place.current_state
             else:
                 translate_attr = xform_attr.Get().GetRow3(3)
                 rotate_x = xform_attr.Get().GetRow3(0)
