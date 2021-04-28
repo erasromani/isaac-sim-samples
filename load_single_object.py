@@ -38,6 +38,7 @@ from omni.isaac.synthetic_utils import OmniKitHelper
 from omni.isaac.synthetic_utils import SyntheticDataHelper
 from utils.visualize import screenshot
 
+
 class GraspSimulator(GraspObject):
     """ Defines an obstacle avoidance scenario
 
@@ -52,7 +53,10 @@ class GraspSimulator(GraspObject):
         self.add_and_register_object()
         if drop:
             # start simulation
-            kit.play()
+            if self._kit.editor.is_playing(): previously_playing = True
+            else:                             previously_playing = False
+
+            if not previously_playing: self.play()
             step = 0
             target_object = self.objects[-1]
             while step < max_steps or self._kit.is_loading():
@@ -61,8 +65,22 @@ class GraspSimulator(GraspObject):
                 object_speed = target_object.get_speed()
                 if object_speed == 0: break
                 step +=1
+
             # Stop physics simulation
-            kit.stop()
+            if not previously_playing: self.stop()
+
+    def add_and_register_object(self):
+        prim = self.create_new_objects()
+        self._kit.update()
+        if not hasattr(self, 'objects'):
+            self.objects = []
+        self.objects.append(RigidBody(prim, self._dc))
+
+    def play(self):
+        self._kit.play()
+    
+    def stop(self):
+        self._kit.stop()
 
 kit = OmniKitHelper(
     {"renderer": "RayTracedLighting", "experience": f'{os.environ["EXP_PATH"]}/isaac-sim-python.json'}
@@ -78,16 +96,64 @@ _physxIFace = _physx.acquire_physx_interface()
 _scenario = GraspSimulator(kit, _dc, _mp)
 
 _scenario.create_franka()
-
 _editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
 _editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
 
-
+# start simulation
 kit.play()
-
+   
 _scenario.register_assets()
-_scenario.load_single_object(drop=False)
+_scenario.load_single_object(drop=True)
+
+while kit.is_loading():
+    kit.update(1 / 60.0)
+
+screenshot(sd_helper)
+
+# Stop physics simulation
 kit.stop()
+
+# _scenario.add_bin()
+# _scenario.add_bin()
+# _scenario.add_bin()
+
+
+# _scenario.play()
+# _scenario.register_assets()
+
+# _scenario.objects = []
+# objects_path = '/scene/objects'
+# objects_prim = _scenario._stage.GetPrimAtPath(objects_path)
+# if objects_prim.IsValid():
+#     for object_prim in objects_prim.GetChildren():
+#         _scenario.objects.append(RigidBody(object_prim, _scenario._dc))
+# print(_scenario.objects)
+# _scenario.stop()
+
+# _scenario.add_bin()
+
+
+# _scenario.load_single_object(drop=True)
+# _scenario.load_single_object(drop=True)
+# _scenario.load_single_object(drop=True)
+# _scenario.load_single_object(drop=True)
+
+# _scenario.play()
+# _scenario.register_assets()
+# _scenario.objects = []
+# objects_path = '/scene/objects'
+# objects_prim = _scenario._stage.GetPrimAtPath(objects_path)
+# if objects_prim.IsValid():
+#     for object_prim in objects_prim.GetChildren():
+#         _scenario.objects.append(RigidBody(object_prim, _scenario._dc))
+# print(_scenario.objects)
+
+# while kit.is_loading():
+#     _scenario.step(0)
+#     kit.update(1 / 60.0)
+# screenshot(sd_helper)
+
+# _scenario.stop()
 
 # # start simulation
 # kit.play()
@@ -101,7 +167,7 @@ kit.stop()
 
 # step = 0
 # target_object = _scenario.objects[0]
-# while step < 1000 or kit.is_loading():
+# while step < 60 or kit.is_loading():
 #     _scenario.step(step)
 #     kit.update(1 / 60.0)
 #     object_velocity = target_object.get_speed()
@@ -110,8 +176,9 @@ kit.stop()
 #     object_y_positions.append(object_position[1])
 #     object_z_positions.append(object_position[2])
 #     object_velocities.append(object_velocity)
-#     if object_velocity == 0: break
+#     # if object_velocity == 0: break
 #     step +=1
+
 # screenshot(sd_helper, suffix=1)
 
 # fig, axes = plt.subplots(2, 2)

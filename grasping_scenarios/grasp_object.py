@@ -38,7 +38,7 @@ def create_prim_from_usd(stage, prim_env_path, prim_usd_path, location):
     envPrim = stage.DefinePrim(prim_env_path, "Xform")  # create an empty Xform at the given path
     envPrim.GetReferences().AddReference(prim_usd_path)  # attach the USD to the given path
     set_translate(envPrim, location)  # set pose
-    return envPrim
+    return stage.GetPrimAtPath(envPrim.GetPath().pathString)
 
 class SM_events(Enum):
     START = 0
@@ -448,7 +448,6 @@ class RigidBody:
         self.name = prim.GetPrimPath().name
         self.handle = self.get_rigid_body_handle()
 
-
     def __repr__(self):
         return self.name
 
@@ -459,8 +458,6 @@ class RigidBody:
             body_handle = self._dc.get_rigid_body(child_path)
             if body_handle != 0:
                 bin_path = child_path
-
-        import pdb; pdb.set_trace()
 
         object_handle = self._dc.get_rigid_body(bin_path)
         if object_handle != 0: return object_handle
@@ -562,12 +559,6 @@ class GraspObject(Scenario):
     def add_bin(self, *args):
         self.create_new_objects(args)
 
-    def add_and_register_object(self, *args):    
-        prim = self.create_new_objects(args)
-        if not hasattr(self, 'objects'):
-            self.objects = []
-        self.objects.append(RigidBody(prim, self._dc))
-
     def create_new_objects(self, *args):
         prim_usd_path = self.objects_usd[random.randint(0, len(self.objects_usd) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
@@ -604,7 +595,7 @@ class GraspObject(Scenario):
             for object_prim in objects_prim.GetChildren():
                 self.objects.append(RigidBody(object_prim, self._dc))
 
-        # register stage machine 
+        # register stage machine
         self.pick_and_place = PickAndPlaceStateMachine(
             self._stage,
             self.franka_solid,
