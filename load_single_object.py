@@ -48,8 +48,9 @@ class GraspSimulator(GraspObject):
     def __init__(self, kit, dc, mp):
         super().__init__(kit.editor, dc, mp)
         self._kit = kit
+        self.frame = 0
     
-    def load_single_object(self, drop=False, max_steps=1000):
+    def load_single_object(self, drop=False, max_steps=2000):
         self.add_and_register_object()
         if drop:
             # start simulation
@@ -68,6 +69,32 @@ class GraspSimulator(GraspObject):
 
             # Stop physics simulation
             if not previously_playing: self.stop()
+
+    def execute_grasp(self, position, angle):
+        self.set_target_angle(angle)
+        self.perform_tasks()
+        # start simulation
+        if self._kit.editor.is_playing(): previously_playing = True
+        else:                             previously_playing = False
+
+        if self.pick_and_place is not None:
+
+            while True:
+                self.step(0)
+                self._kit.update(1 / 60.0)
+                self.frame += 1
+                if self.pick_and_place.evaluation is not None:
+                    break
+                if self.frame % 10 == 0: screenshot(sd_helper, suffix=self.frame)
+        evaluation = self.pick_and_place.evaluation
+        self.stop_tasks()
+        self.step(0)
+        self._kit.update(1 / 60.0)
+
+        # Stop physics simulation
+        if not previously_playing: self.stop()
+
+        return evaluation
 
     def add_and_register_object(self):
         prim = self.create_new_objects()
@@ -96,101 +123,48 @@ _physxIFace = _physx.acquire_physx_interface()
 _scenario = GraspSimulator(kit, _dc, _mp)
 
 _scenario.create_franka()
-_editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
-_editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
+
+# _editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
+# _editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
+
+camera_rig = UsdGeom.Xformable(kit.create_prim("/scene/robot/panda_hand/CameraRig", "Xform"))
+camera = kit.create_prim("/scene/robot/panda_hand/Camera", "Camera", translation=(0.0, 0.0, 11), rotation=(180, 0, 0))
+vpi = omni.kit.viewport.get_viewport_interface()
+vpi.get_viewport_window().set_active_camera(str(camera.GetPath()))
 
 # start simulation
 kit.play()
-   
+
 _scenario.register_assets()
-_scenario.load_single_object(drop=True)
+# _scenario.load_single_object(drop=True)
 
 while kit.is_loading():
     kit.update(1 / 60.0)
 
-screenshot(sd_helper)
+
+evaluation = _scenario.execute_grasp(0, 0)
+
+print(evaluation)
+
+# evaluation = _scenario.execute_grasp(0, 90)
+
+# print(evaluation)
+
+# evaluation = _scenario.execute_grasp(0, 45)
+
+# print(evaluation)
+
+# evaluation = _scenario.execute_grasp(0, 10)
+
+# print(evaluation)
+
+# evaluation = _scenario.execute_grasp(0, -20)
+
+# print(evaluation)
+
+# evaluation = _scenario.execute_grasp(0, 100)
+
+# print(evaluation)
 
 # Stop physics simulation
 kit.stop()
-
-# _scenario.add_bin()
-# _scenario.add_bin()
-# _scenario.add_bin()
-
-
-# _scenario.play()
-# _scenario.register_assets()
-
-# _scenario.objects = []
-# objects_path = '/scene/objects'
-# objects_prim = _scenario._stage.GetPrimAtPath(objects_path)
-# if objects_prim.IsValid():
-#     for object_prim in objects_prim.GetChildren():
-#         _scenario.objects.append(RigidBody(object_prim, _scenario._dc))
-# print(_scenario.objects)
-# _scenario.stop()
-
-# _scenario.add_bin()
-
-
-# _scenario.load_single_object(drop=True)
-# _scenario.load_single_object(drop=True)
-# _scenario.load_single_object(drop=True)
-# _scenario.load_single_object(drop=True)
-
-# _scenario.play()
-# _scenario.register_assets()
-# _scenario.objects = []
-# objects_path = '/scene/objects'
-# objects_prim = _scenario._stage.GetPrimAtPath(objects_path)
-# if objects_prim.IsValid():
-#     for object_prim in objects_prim.GetChildren():
-#         _scenario.objects.append(RigidBody(object_prim, _scenario._dc))
-# print(_scenario.objects)
-
-# while kit.is_loading():
-#     _scenario.step(0)
-#     kit.update(1 / 60.0)
-# screenshot(sd_helper)
-
-# _scenario.stop()
-
-# # start simulation
-# kit.play()
-   
-# _scenario.register_assets()
-# screenshot(sd_helper)
-# object_x_positions = []
-# object_y_positions = []
-# object_z_positions = []
-# object_velocities = []
-
-# step = 0
-# target_object = _scenario.objects[0]
-# while step < 60 or kit.is_loading():
-#     _scenario.step(step)
-#     kit.update(1 / 60.0)
-#     object_velocity = target_object.get_speed()
-#     object_position = target_object.get_position()
-#     object_x_positions.append(object_position[0])
-#     object_y_positions.append(object_position[1])
-#     object_z_positions.append(object_position[2])
-#     object_velocities.append(object_velocity)
-#     # if object_velocity == 0: break
-#     step +=1
-
-# screenshot(sd_helper, suffix=1)
-
-# fig, axes = plt.subplots(2, 2)
-# axes.flatten()[0].plot(object_velocities)
-# axes.flatten()[0].set_ylabel('velocity')
-# axes.flatten()[1].plot(object_x_positions)
-# axes.flatten()[1].set_ylabel('x position')
-# axes.flatten()[2].plot(object_y_positions)
-# axes.flatten()[2].set_ylabel('y position')
-# axes.flatten()[3].plot(object_z_positions)
-# axes.flatten()[3].set_ylabel('z position')
-# plt.savefig('images/velocity.png')
-
-# # Stop physics simulation
-# kit.stop()

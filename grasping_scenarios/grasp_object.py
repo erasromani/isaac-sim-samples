@@ -690,3 +690,6 @@ class GraspObject(Scenario):
     def set_target_angle(self, angle):
         if self.pick_and_place is not None:
             self.pick_and_place.target_angle = angle
+    
+    def set_target_position(self, position):
+        pass
