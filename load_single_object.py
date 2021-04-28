@@ -124,13 +124,8 @@ _scenario = GraspSimulator(kit, _dc, _mp)
 
 _scenario.create_franka()
 
-# _editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
-# _editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
-
-camera_rig = UsdGeom.Xformable(kit.create_prim("/scene/robot/panda_hand/CameraRig", "Xform"))
-camera = kit.create_prim("/scene/robot/panda_hand/Camera", "Camera", translation=(0.0, 0.0, 11), rotation=(180, 0, 0))
-vpi = omni.kit.viewport.get_viewport_interface()
-vpi.get_viewport_window().set_active_camera(str(camera.GetPath()))
+_editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
+_editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
 
 # start simulation
 kit.play()
