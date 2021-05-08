@@ -67,8 +67,8 @@ class Gripper:
 
     def move(self, width=0.03, speed=0.2, wait=False):
         self.width = width
-        if wait:
-            time.sleep(0.5)
+        # if wait:
+        #     time.sleep(0.5)
 
     def update(self):
         self.dc.set_dof_position_target(self.finger_j1, self.width * 0.5 * 100)
@@ -234,7 +234,7 @@ class EndEffector:
             future_time = time.time() + wait_time
 
             while error > required_orig_err and time.time() < future_time:
-                time.sleep(0.1)
+                # time.sleep(0.1)
                 error = self.mp.getError(self.rmp_handle)
 
     def look_at(self, gripper_pos, target):
@@ -272,7 +272,8 @@ class Franka:
         exec_folder = os.path.abspath(
             carb.tokens.get_tokens_interface().resolve(
                 # "${app}/../exts/omni.isaac.motion_planning/resources/lula/lula_franka"
-                "/home/robot-lab/isaac-sim/_build/linux-x86_64/release/exts/omni.isaac.motion_planning/resources/lula/lula_franka"
+                # "/home/robot-lab/isaac-sim/_build/linux-x86_64/release/exts/omni.isaac.motion_planning/resources/lula/lula_franka"
+                f"{os.environ['ISAAC_PATH']}/exts/omni.isaac.motion_planning/resources/lula/lula_franka"
             )
         )
 

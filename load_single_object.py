@@ -13,36 +13,37 @@
 # import omni.kit.ui
 # import omni.kit.settings
 
-import carb
+# import carb
 
-from pxr import Gf, UsdGeom
+# from pxr import Gf, UsdGeom
 from omni.isaac.motion_planning import _motion_planning
 from omni.isaac.dynamic_control import _dynamic_control
-from omni.physx import _physx
+# from omni.physx import _physx
 
-from grasping_scenarios.scenario import Scenario
+# from grasping_scenarios.scenario import Scenario
 from grasping_scenarios.grasp_object import GraspObject, RigidBody
-import asyncio
+# import asyncio
 
-import sys
-import matplotlib.pyplot as plt
+# import sys
+# import matplotlib.pyplot as plt
 
-sys.path.append('/home/robot-lab/isaac-sim/_build/linux-x86_64/release/exts')
+# sys.path.append('/home/robot-lab/isaac-sim/_build/linux-x86_64/release/exts')
 
 import os
-import omni
-import random
-import numpy as np
-from pxr import UsdGeom, Semantics
+# import time
+# import omni
+# import random
+# import numpy as np
+# from pxr import UsdGeom, Semantics
 from omni.isaac.synthetic_utils import OmniKitHelper
 from omni.isaac.synthetic_utils import SyntheticDataHelper
 from utils.visualize import screenshot
 
 
 class GraspSimulator(GraspObject):
-    """ Defines an obstacle avoidance scenario
+    """ Defines a grasping simulation scenario
 
-    Scenarios define the life cycle within kit and handle init, startup, shutdown etc.
+    Scenarios define planar grasp execution in a scene of a Panda arm and various rigid objects
     """
 
     def __init__(self, kit, dc, mp):
@@ -51,6 +52,8 @@ class GraspSimulator(GraspObject):
         self.frame = 0
     
     def load_single_object(self, drop=False, max_steps=2000):
+        """
+        """
         self.add_and_register_object()
         if drop:
             # start simulation
@@ -71,7 +74,10 @@ class GraspSimulator(GraspObject):
             if not previously_playing: self.stop()
 
     def execute_grasp(self, position, angle):
+        """
+        """
         self.set_target_angle(angle)
+        self.set_target_position(position)
         self.perform_tasks()
         # start simulation
         if self._kit.editor.is_playing(): previously_playing = True
@@ -85,7 +91,7 @@ class GraspSimulator(GraspObject):
                 self.frame += 1
                 if self.pick_and_place.evaluation is not None:
                     break
-                if self.frame % 10 == 0: screenshot(sd_helper, suffix=self.frame)
+                # if self.frame % 10 == 0: screenshot(sd_helper, suffix=self.frame)
         evaluation = self.pick_and_place.evaluation
         self.stop_tasks()
         self.step(0)
@@ -97,6 +103,8 @@ class GraspSimulator(GraspObject):
         return evaluation
 
     def add_and_register_object(self):
+        """
+        """
         prim = self.create_new_objects()
         self._kit.update()
         if not hasattr(self, 'objects'):
@@ -104,9 +112,13 @@ class GraspSimulator(GraspObject):
         self.objects.append(RigidBody(prim, self._dc))
 
     def play(self):
+        """
+        """
         self._kit.play()
     
     def stop(self):
+        """
+        """
         self._kit.stop()
 
 kit = OmniKitHelper(
@@ -119,7 +131,7 @@ _editor = kit.editor
 
 _mp = _motion_planning.acquire_motion_planning_interface()
 _dc = _dynamic_control.acquire_dynamic_control_interface()
-_physxIFace = _physx.acquire_physx_interface()
+# _physxIFace = _physx.acquire_physx_interface()
 _scenario = GraspSimulator(kit, _dc, _mp)
 
 _scenario.create_franka()
@@ -128,7 +140,7 @@ _editor.set_camera_position("/OmniverseKit_Persp", 142, -127, 56, True)
 _editor.set_camera_target("/OmniverseKit_Persp", -180, 234, -27, True)
 
 # start simulation
-kit.play()
+_scenario.play()
 
 _scenario.register_assets()
 # _scenario.load_single_object(drop=True)
@@ -136,30 +148,29 @@ _scenario.register_assets()
 while kit.is_loading():
     kit.update(1 / 60.0)
 
-
-evaluation = _scenario.execute_grasp(0, 0)
+evaluation = _scenario.execute_grasp([40, 0, 5], 0)
 
 print(evaluation)
 
-# evaluation = _scenario.execute_grasp(0, 90)
+# evaluation = _scenario.execute_grasp([40, 10, 5], 45)
 
 # print(evaluation)
 
-# evaluation = _scenario.execute_grasp(0, 45)
+# evaluation = _scenario.execute_grasp([30, -10, 5], 90)
 
 # print(evaluation)
 
-# evaluation = _scenario.execute_grasp(0, 10)
+# evaluation = _scenario.execute_grasp([40, 0, 5], 0)
 
 # print(evaluation)
 
-# evaluation = _scenario.execute_grasp(0, -20)
+# evaluation = _scenario.execute_grasp([40, 0, 5], 0)
 
 # print(evaluation)
 
-# evaluation = _scenario.execute_grasp(0, 100)
+# evaluation = _scenario.execute_grasp([40, 0, 5], 0)
 
 # print(evaluation)
 
 # Stop physics simulation
-kit.stop()
+_scenario.stop()

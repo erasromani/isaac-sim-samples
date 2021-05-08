@@ -72,13 +72,13 @@ class PickAndPlaceStateMachine(object):
     and the handlers are defined as in-class functions
     """
 
-    def __init__(self, stage, robot, ee_prim, target_body, default_position):
+    def __init__(self, stage, robot, ee_prim, default_position):
         self.robot = robot
         self.dc = robot.dc
         self.end_effector = ee_prim
         self.end_effector_handle = None
         self._stage = stage
-        self.current = target_body
+        # self.current = target_body
 
         self.start_time = 0.0
         self.start = False
@@ -86,6 +86,7 @@ class PickAndPlaceStateMachine(object):
         self.default_timeout = 10
         self.default_position = copy(default_position)
         self.target_position = default_position
+        self.target_point = default_position.p
         self.target_angle = 0 # grasp angle in degrees
         self.reset = False
         self.evaluation = None
@@ -244,28 +245,31 @@ class PickAndPlaceStateMachine(object):
             wait_time=5.0,
         )
 
-    def get_target_to_object(self, offset_position=[]):
-        """
-        Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
-        by [offset_up, offset_down]
-        """
-        offset = _dynamic_control.Transform()
-        if offset_position:
+    # def get_target_to_object(self, offset_position=[]):
+    #     """
+    #     Gets target pose to end effector on a given target, with an offset on the end effector actuator direction given
+    #     by [offset_up, offset_down]
+    #     """
+    #     offset = _dynamic_control.Transform()
+    #     if offset_position:
             
-            offset.p.x = offset_position[0]
-            offset.p.y = offset_position[1]
-            offset.p.z = offset_position[2]
+    #         offset.p.x = offset_position[0]
+    #         offset.p.y = offset_position[1]
+    #         offset.p.z = offset_position[2]
 
-        body_handle = self.dc.get_rigid_body(self.current)
-        obj_pose = self.dc.get_rigid_body_pose(body_handle)
-        target_pose = _dynamic_control.Transform()
-        target_pose.p = obj_pose.p
-        target_pose.r = self.get_target_orientation()
-        target_pose = math_utils.mul(target_pose, offset)
-        target_pose.p = math_utils.mul(target_pose.p, 0.01)
-        return target_pose
+    #     body_handle = self.dc.get_rigid_body(self.current)
+    #     obj_pose = self.dc.get_rigid_body_pose(body_handle)
+    #     target_pose = _dynamic_control.Transform()
+    #     target_pose.p = obj_pose.p
+    #     target_pose.r = self.get_target_orientation()
+    #     target_pose = math_utils.mul(target_pose, offset)
+    #     target_pose.p = math_utils.mul(target_pose.p, 0.01)
+    #     return target_pose
 
     def get_target_orientation(self):
+        """
+        Gets target gripper orientation given target angle and a plannar grasp.
+        """
         angle = self.target_angle * np.pi / 180
         mat = Gf.Matrix3f(
             -np.cos(angle), -np.sin(angle), 0, -np.sin(angle), np.cos(angle), 0, 0, 0, -1
@@ -275,17 +279,44 @@ class PickAndPlaceStateMachine(object):
         q = [q_x, q_y, q_z, q.GetReal()]
         return q
 
-    def set_target_to_object(self, offset_position=[], n_waypoints=1, clear_waypoints=True):
+    def get_target_to_point(self, offset_position=[]):
+        offset = _dynamic_control.Transform()
+        if offset_position:
+            
+            offset.p.x = offset_position[0]
+            offset.p.y = offset_position[1]
+            offset.p.z = offset_position[2]
+
+        target_pose = _dynamic_control.Transform()
+        target_pose.p = self.target_point
+        target_pose.r = self.get_target_orientation()
+        target_pose = math_utils.mul(target_pose, offset)
+        target_pose.p = math_utils.mul(target_pose.p, 0.01)
+        return target_pose
+
+    def set_target_to_point(self, offset_position=[], n_waypoints=1, clear_waypoints=True):
         """
-        Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
+        Clears waypoints list, and sets a new waypoint list towards the a given point in space.
         """
-        target_position = self.get_target_to_object(offset_position=offset_position)
+        target_position = self.get_target_to_point(offset_position=offset_position)
         # linear interpolate to target pose
         if clear_waypoints:
             self.waypoints.clear()
         self.lerp_to_pose(target_position, n_waypoints=n_waypoints)
         # Get first waypoint target
         self.target_position = self.waypoints.popleft()
+
+    # def set_target_to_object(self, offset_position=[], n_waypoints=1, clear_waypoints=True):
+    #     """
+    #     Clears waypoints list, and sets a new waypoint list towards the target pose for an object.
+    #     """
+    #     target_position = self.get_target_to_object(offset_position=offset_position)
+    #     # linear interpolate to target pose
+    #     if clear_waypoints:
+    #         self.waypoints.clear()
+    #     self.lerp_to_pose(target_position, n_waypoints=n_waypoints)
+    #     # Get first waypoint target
+    #     self.target_position = self.waypoints.popleft()
 
     def step(self, timestamp, start=False, reset=False):
         """
@@ -364,10 +395,10 @@ class PickAndPlaceStateMachine(object):
         self.lerp_to_pose(self.default_position, 60)
         self.robot.end_effector.gripper.open()
         # set target above the current bin with offset of 10 cm
-        self.set_target_to_object(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
+        self.set_target_to_point(offset_position=[0.0, 0.0, -10.0], n_waypoints=90, clear_waypoints=False)
         # pause before lowering to target object
         self.lerp_to_pose(self.waypoints[-1], 180)
-        self.set_target_to_object(offset_position=[0.0, 0.0, -2.0], n_waypoints=90, clear_waypoints=False)
+        self.set_target_to_point(n_waypoints=90, clear_waypoints=False)
         # start arm movement
         self.move_to_target()
         # Move to next state
@@ -600,7 +631,7 @@ class GraspObject(Scenario):
             self._stage,
             self.franka_solid,
             self._stage.GetPrimAtPath("/scene/robot/panda_hand"),
-            self.bin_path,
+            # self.bin_path,
             self.default_position,
         )
 
@@ -692,4 +723,5 @@ class GraspObject(Scenario):
             self.pick_and_place.target_angle = angle
     
     def set_target_position(self, position):
-        pass
+        if self.pick_and_place is not None:
+            self.pick_and_place.target_point = position
