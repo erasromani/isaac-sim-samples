@@ -8,18 +8,23 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import random
+import os
 import numpy as np
+import glob
 
 from pxr import Gf, UsdGeom
 from enum import Enum
 import omni
 import carb
 
+# from pathlib import Path
 from omni.physx.scripts.physicsUtils import add_ground_plane
 from omni.isaac.dynamic_control import _dynamic_control
 from omni.isaac.utils._isaac_utils import math as math_utils
 from omni.isaac.samples.scripts.utils.world import World
 # from omni.isaac.samples.scripts.utils.franka import Franka, default_config
+from omni.isaac.utils.scripts.nucleus_utils import find_nucleus_server
+
 from .franka import Franka, default_config
 from scipy.spatial.transform import Rotation
 
@@ -101,7 +106,7 @@ class PickAndPlaceStateMachine(object):
             [0.08, 0.4, 0.4, 0.4],
             [0.18, 0.6, 0.6, 0.6],
         ]
-        self.add_bin = None
+        self.add_object = None
 
         # Event management variables
 
@@ -505,6 +510,7 @@ class RigidBody:
         return speed
 
     def get_pose(self):
+        # TODO: Convert this to scipy transformation object
         return self._dc.get_rigid_body_pose(self.handle)
 
     def get_position(self):
@@ -517,14 +523,19 @@ class RigidBody:
         orientation = np.array(pose.r)
         return orientation
 
+    def get_bound(self):
+        bound = UsdGeom.Mesh(self.prim).ComputeWorldBound(0.0, "default").GetBox()
+        return [np.array(bound.GetMin()), np.array(bound.GetMax())]
+
 class GraspObject(Scenario):
     """ Defines an obstacle avoidance scenario
 
     Scenarios define the life cycle within kit and handle init, startup, shutdown etc.
     """
 
-    def __init__(self, editor, dc, mp):
-        super().__init__(editor, dc, mp)
+    def __init__(self, kit, dc, mp):
+        super().__init__(kit.editor, dc, mp)
+        self._kit = kit
         self._paused = True
         self._start = False
         self._reset = False
@@ -543,30 +554,41 @@ class GraspObject(Scenario):
         self.add_objects_timeout = -1
         self.franka_solid = None
 
+        result, nucleus_server = find_nucleus_server()
+        if result is False:
+            carb.log_error("Could not find nucleus server with /Isaac folder")
+        else:
+            self.nucleus_server = nucleus_server
+
     def __del__(self):
         if self.franka_solid:
             self.franka_solid.end_effector.gripper = None
         super().__del__()
+
+    def add_object_path(self, object_path, from_server=False):
+        if from_server and hasattr(self, 'nucleus_server'):
+            object_path = os.path.join(self.nucleus_server, object_path)
+        if not from_server and os.path.isdir(object_path): objects_usd = glob.glob(os.path.join(object_path, '**/*.usd'), recursive=True)
+        else: object_usd = [object_path]
+        if hasattr(self, 'objects_usd'):
+            self.objects_usd.extend(object_usd)
+        else:
+            self.objects_usd = object_usd
 
     def create_franka(self, *args):
         super().create_franka()
         if self.asset_path is None:
             return
 
-        self.objects_usd = [
-            self.asset_path + "/Props/Flip_Stack/large_corner_bracket_physics.usd",
-            self.asset_path + "/Props/Flip_Stack/screw_95_physics.usd",
-            self.asset_path + "/Props/Flip_Stack/screw_99_physics.usd",
-            self.asset_path + "/Props/Flip_Stack/small_corner_bracket_physics.usd",
-            self.asset_path + "/Props/Flip_Stack/t_connector_physics.usd",
-        ]
-        self.current_obj = 0
-
         # Load robot environment and set its transform
         self.env_path = "/scene"
         robot_usd = self.asset_path + "/Robots/Franka/franka.usd"
         robot_path = "/scene/robot"
         create_prim_from_usd(self._stage, robot_path, robot_usd, Gf.Vec3d(0, 0, 0))
+
+        bin_usd = self.asset_path + "/Props/KLT_Bin/large_KLT.usd"
+        bin_path = "/scene/bin"
+        create_prim_from_usd(self._stage, bin_path, bin_usd, Gf.Vec3d(40, 0, 4))
 
         # Set robot end effector Target
         target_path = "/scene/target"
@@ -585,39 +607,37 @@ class GraspObject(Scenario):
         # Setup physics simulation
         add_ground_plane(self._stage, "/groundPlane", "Z", 1000.0, Gf.Vec3f(0.0), Gf.Vec3f(1.0))
         setup_physics(self._stage)        
-        self.add_bin()
 
     def add_bin(self, *args):
-        self.create_new_objects(args)
+        pass
 
-    def create_new_objects(self, *args):
+    def rand_position(self, bound, margin=0, z_range=None):
+        x_range = (bound[0][0] * (1 - margin), bound[1][0] * (1 - margin))
+        y_range = (bound[0][1] * (1 - margin), bound[1][1] * (1 - margin))
+        if z_range is None:
+            z_range = (bound[0][2] * (1 - margin), bound[1][2] * (1 - margin))
+        x = np.random.uniform(*x_range)
+        y = np.random.uniform(*y_range)
+        z = np.random.uniform(*z_range)
+        return Gf.Vec3d(x, y, z)
+
+    def add_object(self, *args):
+        return self.create_new_objects(args)
+
+    def create_new_objects(self, *args, location=None):
+        if not hasattr(self, 'objects_usd'):
+            return
         prim_usd_path = self.objects_usd[random.randint(0, len(self.objects_usd) - 1)]
         prim_env_path = "/scene/objects/object_{}".format(self.current_obj)
-        location = Gf.Vec3d(40, 2 * self.current_obj, 10)
+        if location is None:
+            location = self.rand_position(self.bin_solid.get_bound(), margin=0.2, z_range=(10, 10))
+            # location = Gf.Vec3d(40, 2 * self.current_obj, 10)  # TODO: Randomize spawn location and orientation
         prim = create_prim_from_usd(self._stage, prim_env_path, prim_usd_path, location)
-        self.current_obj += 1
+        if hasattr(self, 'current_obj'): self.current_obj += 1
+        else:                            self.current_obj = 0
         return prim
 
-    def register_assets(self, *args):
-
-        # Prim path of two blocks and their handles
-        object_path = "/scene/objects/object_0"
-        object_children = self._stage.GetPrimAtPath(object_path).GetChildren()
-        for child in object_children:
-            child_path = child.GetPath().pathString
-            body_handle = self._dc.get_rigid_body(child_path)
-            if body_handle != 0:
-                self.bin_path = child_path
-
-        ## register world with RMP
-        self.world =  World(self._dc, self._mp)
-
-        ## register robot with RMP
-        robot_path = "/scene/robot"
-        self.franka_solid = Franka(
-            self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
-        )
-
+    def register_objects(self, *args):
         # register objects
         self.objects = []
         objects_path = '/scene/objects'
@@ -626,12 +646,29 @@ class GraspObject(Scenario):
             for object_prim in objects_prim.GetChildren():
                 self.objects.append(RigidBody(object_prim, self._dc))
 
+    def register_scene(self, *args):
+        ## register world with RMP
+        self.world =  World(self._dc, self._mp)
+        self.register_assets(args)
+        self.register_objects(args)
+
+    def register_assets(self, *args):
+        # register robot with RMP
+        robot_path = "/scene/robot"
+        self.franka_solid = Franka(
+            self._stage, self._stage.GetPrimAtPath(robot_path), self._dc, self._mp, self.world, default_config
+        )
+
+        # register bin
+        bin_path = "/scene/bin"
+        bin_prim = self._stage.GetPrimAtPath(bin_path)
+        self.bin_solid = RigidBody(bin_prim, self._dc)
+
         # register stage machine
         self.pick_and_place = PickAndPlaceStateMachine(
             self._stage,
             self.franka_solid,
             self._stage.GetPrimAtPath("/scene/robot/panda_hand"),
-            # self.bin_path,
             self.default_position,
         )
 
@@ -657,7 +694,6 @@ class GraspObject(Scenario):
                 self._time += 1.0 / 60.0
                 self.pick_and_place.step(self._time, self._start, self._reset)
                 if self._reset:
-                    # self._paused = (self._time - self._start_time) < self.timeout_max
                     self._paused = True
                     self._time = 0
                     self._start_time = 0
